@@ -10,7 +10,934 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/app.css">
+  <style>
+:root {
+  --accent: #d4f53c;
+  --secondary: #ff6535;
+  --bg: #0a0c10;
+  --surface-1: #11141a;
+  --surface-2: #181b23;
+  --border: #2a2e3d;
+  --text: #edf0fa;
+  --text-muted: #9aa0bb;
+  --radius-card: 16px;
+  --radius-field: 10px;
+  --radius-sm: 7px;
+  --font-display: 'Barlow Condensed', sans-serif;
+  --font-body: 'Barlow', sans-serif;
+  --nav-height: 64px;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.5;
+  overflow: hidden;
+}
+
+input, select, textarea, button {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* ── App Shell ── */
+#app {
+  max-width: 480px;
+  margin: 0 auto;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+.screen {
+  display: none;
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.screen.active {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Bottom Navigation ── */
+#bottom-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  background: var(--surface-1);
+  border-top: 1px solid var(--border);
+  padding: 8px 0 max(10px, env(safe-area-inset-bottom, 10px));
+  flex-shrink: 0;
+}
+
+.nav-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 4px 20px;
+  min-height: 44px;
+  min-width: 44px;
+  transition: color 0.15s;
+}
+
+.nav-btn.active {
+  color: var(--accent);
+}
+
+.nav-btn-center {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(212, 245, 60, 0.35);
+  transition: transform 0.15s, box-shadow 0.15s;
+  flex-shrink: 0;
+}
+
+.nav-btn-center:active {
+  transform: scale(0.93);
+  box-shadow: 0 2px 10px rgba(212, 245, 60, 0.2);
+}
+
+/* ── Screen Header ── */
+.screen-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 16px 12px;
+  flex-shrink: 0;
+}
+
+.screen-title {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--text);
+}
+
+/* ── Cards ── */
+.card {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  cursor: pointer;
+  min-height: 44px;
+}
+
+.card-body {
+  padding: 0 16px 16px;
+  border-top: 1px solid var(--border);
+}
+
+.card-body.hidden {
+  display: none;
+}
+
+/* ── Buttons ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 10px 16px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  min-height: 44px;
+  transition: opacity 0.15s, transform 0.1s;
+}
+
+.btn:active { transform: scale(0.97); }
+
+.btn-primary {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.btn-secondary {
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+
+.btn-danger {
+  background: transparent;
+  color: #ff4444;
+  border: 1px solid #ff4444;
+}
+
+.btn-icon {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 8px;
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+}
+
+.btn-icon:hover { color: var(--text); }
+
+.btn-full { width: 100%; }
+
+/* ── Form Fields ── */
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.field-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.field-input {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-field);
+  padding: 11px 14px;
+  color: var(--text);
+  font-size: 15px;
+  width: 100%;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.field-input:focus {
+  border-color: var(--accent);
+}
+
+.field-input::placeholder {
+  color: var(--text-muted);
+  opacity: 0.6;
+}
+
+select.field-input {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239aa0bb' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+}
+
+textarea.field-input {
+  resize: none;
+  min-height: 100px;
+  line-height: 1.6;
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+/* ── Section headings ── */
+.section-title {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 14px 0 8px;
+}
+
+/* ── Badges ── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.badge-trocken { background: rgba(212, 245, 60, 0.15); color: var(--accent); }
+.badge-nass { background: rgba(100, 160, 255, 0.15); color: #64a0ff; }
+.badge-moto { background: rgba(255, 101, 53, 0.15); color: var(--secondary); }
+
+/* ── Toggle / Condition Select ── */
+.toggle-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.toggle-btn {
+  background: var(--surface-2);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-muted);
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  min-height: 44px;
+}
+
+.toggle-btn.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(212, 245, 60, 0.06);
+}
+
+.toggle-btn svg { opacity: 0.6; transition: opacity 0.15s; }
+.toggle-btn.active svg { opacity: 1; }
+
+/* ── List items (track, vehicle select) ── */
+.list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-radius: var(--radius-card);
+  background: var(--surface-1);
+  border: 2px solid var(--border);
+  cursor: pointer;
+  margin-bottom: 8px;
+  transition: border-color 0.15s, background 0.15s;
+  min-height: 44px;
+}
+
+.list-item.active {
+  border-color: var(--accent);
+  background: rgba(212, 245, 60, 0.05);
+}
+
+.list-item-name {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.list-item-meta {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* ── Wizard ── */
+.wizard-step-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px 0 4px;
+}
+
+.wizard-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--border);
+  transition: background 0.2s, width 0.2s;
+}
+
+.wizard-dot.active {
+  background: var(--accent);
+  width: 20px;
+  border-radius: 4px;
+}
+
+.wizard-dot.done {
+  background: var(--accent);
+  opacity: 0.4;
+}
+
+/* ── Scroll padding ── */
+.scroll-content {
+  padding: 0 16px 24px;
+  flex: 1;
+}
+
+/* ── Empty state ── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 12px;
+  padding: 60px 32px;
+  color: var(--text-muted);
+  flex: 1;
+}
+
+.empty-state-icon { opacity: 0.3; margin-bottom: 4px; }
+.empty-state-title { font-family: var(--font-display); font-size: 20px; font-weight: 600; color: var(--text); }
+.empty-state-text { font-size: 14px; line-height: 1.6; }
+
+/* ── Vehicle card ── */
+.vehicle-card {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  margin-bottom: 12px;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+
+.vehicle-card-header {
+  padding: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.vehicle-card-title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.vehicle-card-meta {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 3px;
+}
+
+.vehicle-card-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.vehicle-card-expand {
+  padding: 8px 16px;
+  border-top: 1px solid var(--border);
+}
+
+.vehicle-section {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+}
+
+.vehicle-section-title {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+
+.kv-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 12px;
+}
+
+.kv-item { display: flex; flex-direction: column; gap: 2px; }
+.kv-key { font-size: 11px; color: var(--text-muted); }
+.kv-value { font-size: 14px; font-weight: 500; }
+
+.umbau-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  margin: 2px;
+}
+
+/* ── Setup screen ── */
+.setup-section {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+
+.setup-section-header {
+  padding: 14px 16px;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.setup-section-body {
+  padding: 16px;
+}
+
+/* ── Bestzeit input ── */
+.bestzeit-input {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 700;
+  text-align: center;
+  letter-spacing: 0.05em;
+  color: var(--accent);
+  background: var(--surface-2);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: 16px;
+  width: 100%;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.bestzeit-input:focus { border-color: var(--accent); }
+.bestzeit-input::placeholder { color: var(--border); }
+
+/* ── Times screen ── */
+.bestzeit-banner {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: 20px 16px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.bestzeit-value {
+  font-family: var(--font-display);
+  font-size: 42px;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.02em;
+  line-height: 1;
+}
+
+.bestzeit-delta {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--accent);
+  margin-top: 4px;
+}
+
+.bestzeit-delta.slower { color: #ff4444; }
+
+.bestzeit-meta {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* ── Chart ── */
+.chart-container {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.chart-container canvas {
+  width: 100%;
+  display: block;
+}
+
+/* ── Filter bar ── */
+.filter-bar {
+  display: flex;
+  gap: 8px;
+  padding: 0 16px 10px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border);
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.filter-bar::-webkit-scrollbar { display: none; }
+.filter-bar.dragging { cursor: grabbing; }
+
+.filter-chip {
+  flex-shrink: 0;
+  padding: 7px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--surface-1);
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  -webkit-appearance: none;
+  background-image: none;
+  min-height: 36px;
+}
+
+.filter-chip.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(212, 245, 60, 0.08);
+}
+
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+}
+
+.filter-divider {
+  width: 1px;
+  height: 20px;
+  background: var(--border);
+  flex-shrink: 0;
+  align-self: center;
+}
+
+/* ── Filter Bottom Sheet Options ── */
+.filter-sheet-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 4px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  font-size: 16px;
+  min-height: 52px;
+  transition: color 0.15s;
+}
+
+.filter-sheet-option:last-child { border-bottom: none; }
+
+.filter-sheet-option.active {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.filter-sheet-option:active { opacity: 0.7; }
+
+/* ── History table ── */
+.history-entry {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+
+.history-entry-header {
+  display: flex;
+  align-items: center;
+  padding: 12px 14px;
+  gap: 12px;
+  cursor: pointer;
+  min-height: 44px;
+}
+
+.history-entry-time {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  min-width: 80px;
+}
+
+.history-entry-info {
+  flex: 1;
+}
+
+.history-entry-track {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.history-entry-date {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.history-entry-delta {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
+  color: #ff4444;
+  min-width: 50px;
+  text-align: right;
+}
+
+.history-entry-delta.best { color: var(--accent); }
+
+.history-entry-body {
+  border-top: 1px solid var(--border);
+  padding: 14px;
+}
+
+/* ── Modal ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: flex-end;
+  z-index: 100;
+  backdrop-filter: blur(4px);
+}
+
+.modal-sheet {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: 24px 24px 0 0;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 0 16px max(24px, env(safe-area-inset-bottom, 24px));
+  max-height: 90dvh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.modal-handle {
+  width: 36px;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  margin: 12px auto 16px;
+}
+
+.modal-title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+/* ── Umbauten list (edit mode) ── */
+.umbau-item-edit {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.umbau-item-edit .field-input { flex: 1; margin-bottom: 0; }
+
+.btn-remove-umbau {
+  background: none;
+  border: none;
+  color: #ff4444;
+  cursor: pointer;
+  padding: 8px;
+  min-width: 36px;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Delete confirm ── */
+.delete-confirm {
+  background: rgba(255, 68, 68, 0.08);
+  border: 1px solid rgba(255, 68, 68, 0.3);
+  border-radius: var(--radius-card);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 8px 16px 16px;
+}
+
+.delete-confirm-text {
+  font-size: 13px;
+  color: #ff4444;
+  line-height: 1.4;
+}
+
+.delete-confirm-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* ── Event Marker ── */
+.event-marker {
+  margin-bottom: 8px;
+}
+
+.event-marker-line {
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--secondary), transparent);
+  margin-bottom: 6px;
+}
+
+.event-marker-body {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: rgba(255, 101, 53, 0.07);
+  border: 1px solid rgba(255, 101, 53, 0.25);
+  border-radius: var(--radius-card);
+}
+
+.event-marker-icon {
+  color: var(--secondary);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.event-marker-content {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.event-marker-typ {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--secondary);
+}
+
+.event-marker-date {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.event-marker-notiz {
+  width: 100%;
+  font-size: 12px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* ── Settings ── */
+.settings-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  margin-bottom: 10px;
+  cursor: pointer;
+  min-height: 44px;
+  transition: border-color 0.15s;
+}
+
+.settings-item:active { border-color: var(--accent); }
+
+.settings-item-label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.settings-item-title { font-weight: 600; font-size: 15px; }
+.settings-item-desc { font-size: 12px; color: var(--text-muted); }
+
+/* ── Misc utilities ── */
+.text-accent { color: var(--accent); }
+.text-muted { color: var(--text-muted); }
+.text-danger { color: #ff4444; }
+.font-display { font-family: var(--font-display); }
+.mt-8 { margin-top: 8px; }
+.mt-16 { margin-top: 16px; }
+.mb-8 { margin-bottom: 8px; }
+.mb-16 { margin-bottom: 16px; }
+
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 14px 0;
+}
+
+.row-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.app-version {
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-muted);
+  opacity: 0.5;
+  padding: 20px 0 8px;
+}
+  </style>
 </head>
 <body>
   <div id="app">
@@ -53,12 +980,2374 @@
     </nav>
   </div>
 
-  <script src="js/data.js"></script>
-  <script src="js/screen-fahrzeuge.js"></script>
-  <script src="js/screen-wizard.js"></script>
-  <script src="js/screen-setup.js"></script>
-  <script src="js/screen-zeiten.js"></script>
-  <script src="js/export-import.js"></script>
-  <script src="js/app.js"></script>
+  <script>
+// ── Trackday Manager — Data Layer ──
+
+const DB_VERSION = 2;
+const STORAGE_KEY = 'trackday_v1';
+
+const DB = {
+  version: DB_VERSION,
+  vehicles: [],
+  sessions: [],
+  events: []
+};
+
+// ── Persistence ──
+
+function _loadData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    if (parsed.version === DB_VERSION) {
+      DB.vehicles = parsed.vehicles || [];
+      DB.sessions = parsed.sessions || [];
+      DB.events = parsed.events || [];
+    } else {
+      _migrateStorage(parsed);
+    }
+  } catch (e) {
+    console.error('Fehler beim Laden:', e);
+  }
+}
+
+function _saveData() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({
+    version: DB_VERSION,
+    vehicles: DB.vehicles,
+    sessions: DB.sessions,
+    events: DB.events
+  }));
+}
+
+function _migrateStorage(old) {
+  DB.vehicles = old.vehicles || [];
+  DB.sessions = (old.sessions || []).map(s => _migrateSession(s, old.version || 1));
+  DB.events = old.events || [];
+  _saveData();
+}
+
+function _migrateSession(s, fromVersion) {
+  if (fromVersion < 2) {
+    const r = s.reifen || {};
+    s.reifen = {
+      vorne: { hersteller: r.hersteller || '', modell: r.modell || '', compound: r.compound || '', druck: r.druck_vorne ?? '' },
+      hinten: { hersteller: r.hersteller || '', modell: r.modell || '', compound: r.compound || '', druck: r.druck_hinten ?? '' }
+    };
+  }
+  return s;
+}
+
+function generateId() {
+  if (crypto && crypto.randomUUID) return crypto.randomUUID();
+  return 'id_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+}
+
+// ── Vehicles ──
+
+function getVehicles() {
+  return DB.vehicles;
+}
+
+function getVehicle(id) {
+  return DB.vehicles.find(v => v.id === id) || null;
+}
+
+function addVehicle(data) {
+  const now = new Date().toISOString();
+  const v = {
+    id: generateId(),
+    name: data.name || '',
+    year: data.year || '',
+    motor: {
+      hubraum: data.motor?.hubraum || '',
+      leistung: data.motor?.leistung || '',
+      drehmoment: data.motor?.drehmoment || ''
+    },
+    fahrwerk: {
+      daempfer_vorne: data.fahrwerk?.daempfer_vorne || '',
+      daempfer_hinten: data.fahrwerk?.daempfer_hinten || '',
+      federn_vorne: data.fahrwerk?.federn_vorne || '',
+      federn_hinten: data.fahrwerk?.federn_hinten || ''
+    },
+    bremsen: {
+      belaege_vorne: data.bremsen?.belaege_vorne || '',
+      belaege_hinten: data.bremsen?.belaege_hinten || '',
+      scheibe_vorne: data.bremsen?.scheibe_vorne || '',
+      scheibe_hinten: data.bremsen?.scheibe_hinten || '',
+      bias: data.bremsen?.bias || ''
+    },
+    getriebe: {
+      uebersetzung: data.getriebe?.uebersetzung || '',
+      differential: data.getriebe?.differential || ''
+    },
+    gewicht: {
+      leergewicht: data.gewicht?.leergewicht || '',
+      fahrer: data.gewicht?.fahrer || '',
+      ballast: data.gewicht?.ballast || ''
+    },
+    umbauten: data.umbauten || [],
+    notizen: data.notizen || '',
+    createdAt: now,
+    updatedAt: now
+  };
+  DB.vehicles.push(v);
+  _saveData();
+  return v;
+}
+
+function updateVehicle(id, data) {
+  const idx = DB.vehicles.findIndex(v => v.id === id);
+  if (idx === -1) return null;
+  DB.vehicles[idx] = { ...DB.vehicles[idx], ...data, updatedAt: new Date().toISOString() };
+  _saveData();
+  return DB.vehicles[idx];
+}
+
+function deleteVehicle(id) {
+  DB.vehicles = DB.vehicles.filter(v => v.id !== id);
+  DB.sessions = DB.sessions.filter(s => s.vehicleId !== id);
+  _saveData();
+}
+
+// ── Sessions ──
+
+function getSessions(vehicleId) {
+  if (vehicleId) return DB.sessions.filter(s => s.vehicleId === vehicleId);
+  return DB.sessions;
+}
+
+function getSession(id) {
+  return DB.sessions.find(s => s.id === id) || null;
+}
+
+function addSession(data) {
+  const s = {
+    id: generateId(),
+    vehicleId: data.vehicleId || '',
+    datum: data.datum || '',
+    uhrzeit: data.uhrzeit || '',
+    strecke: data.strecke || '',
+    streckeKm: data.streckeKm || '',
+    bedingung: data.bedingung || 'trocken',
+    temperatur: {
+      luft: data.temperatur?.luft ?? '',
+      asphalt: data.temperatur?.asphalt ?? ''
+    },
+    reifen: {
+      vorne: {
+        hersteller: data.reifen?.vorne?.hersteller || '',
+        modell: data.reifen?.vorne?.modell || '',
+        compound: data.reifen?.vorne?.compound || '',
+        druck: data.reifen?.vorne?.druck ?? ''
+      },
+      hinten: {
+        hersteller: data.reifen?.hinten?.hersteller || '',
+        modell: data.reifen?.hinten?.modell || '',
+        compound: data.reifen?.hinten?.compound || '',
+        druck: data.reifen?.hinten?.druck ?? ''
+      }
+    },
+    elektronik: {
+      tc_stufe: data.elektronik?.tc_stufe ?? '',
+      tc_modus: data.elektronik?.tc_modus ?? ''
+    },
+    sekundaer: {
+      ritzel: data.sekundaer?.ritzel ?? '',
+      kettenrad: data.sekundaer?.kettenrad ?? '',
+      kettenlaenge: data.sekundaer?.kettenlaenge ?? ''
+    },
+    gabel: {
+      negativfederweg_mm: data.gabel?.negativfederweg_mm ?? '',
+      durchstreckung_mm: data.gabel?.durchstreckung_mm ?? '',
+      federvorspannung: data.gabel?.federvorspannung ?? '',
+      druckstufe_klicks: data.gabel?.druckstufe_klicks ?? '',
+      zugstufe_klicks: data.gabel?.zugstufe_klicks ?? '',
+      oeltyp: data.gabel?.oeltyp ?? '',
+      oelstand_mm: data.gabel?.oelstand_mm ?? ''
+    },
+    federbein: {
+      negativfederweg_mm: data.federbein?.negativfederweg_mm ?? '',
+      hoehe_mm: data.federbein?.hoehe_mm ?? '',
+      messpunkt: data.federbein?.messpunkt || '',
+      federvorspannung: data.federbein?.federvorspannung ?? '',
+      druckstufe_klicks: data.federbein?.druckstufe_klicks ?? '',
+      zugstufe_klicks: data.federbein?.zugstufe_klicks ?? ''
+    },
+    bestzeit: data.bestzeit || '',
+    notiz: data.notiz || '',
+    createdAt: new Date().toISOString()
+  };
+  DB.sessions.push(s);
+  _saveData();
+  return s;
+}
+
+function updateSession(id, data) {
+  const idx = DB.sessions.findIndex(s => s.id === id);
+  if (idx === -1) return null;
+  DB.sessions[idx] = { ...DB.sessions[idx], ...data };
+  _saveData();
+  return DB.sessions[idx];
+}
+
+function deleteSession(id) {
+  DB.sessions = DB.sessions.filter(s => s.id !== id);
+  _saveData();
+}
+
+// ── Events ──
+
+function getEvents(vehicleId) {
+  if (vehicleId) return DB.events.filter(e => e.vehicleId === vehicleId);
+  return DB.events;
+}
+
+function addEvent(data) {
+  const e = {
+    id: generateId(),
+    vehicleId: data.vehicleId || '',
+    datum: data.datum || '',
+    typ: data.typ || 'Sonstiges',
+    notiz: data.notiz || '',
+    createdAt: new Date().toISOString()
+  };
+  DB.events.push(e);
+  _saveData();
+  return e;
+}
+
+function deleteEvent(id) {
+  DB.events = DB.events.filter(e => e.id !== id);
+  _saveData();
+}
+
+function getLastSessionForVehicle(vehicleId) {
+  const list = DB.sessions
+    .filter(s => s.vehicleId === vehicleId)
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  return list[0] || null;
+}
+
+// ── Time helpers ──
+
+function parseTime(str) {
+  if (!str) return null;
+  const parts = str.split(':');
+  if (parts.length === 2) {
+    const mins = parseInt(parts[0], 10);
+    const secs = parseFloat(parts[1]);
+    if (isNaN(mins) || isNaN(secs)) return null;
+    return mins * 60 + secs;
+  }
+  return null;
+}
+
+function formatTime(seconds) {
+  if (seconds === null || seconds === undefined) return '—';
+  const m = Math.floor(seconds / 60);
+  const s = (seconds % 60).toFixed(3).padStart(6, '0');
+  return `${m}:${s}`;
+}
+
+// ── Export ──
+
+function getExportPayload() {
+  return {
+    version: DB_VERSION,
+    exportedAt: new Date().toISOString(),
+    app: 'trackday-manager',
+    data: { vehicles: DB.vehicles, sessions: DB.sessions, events: DB.events }
+  };
+}
+
+// ── Import ──
+
+function importFromFile(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const parsed = JSON.parse(e.target.result);
+        if (parsed.app !== 'trackday-manager') {
+          return reject(new Error('Ungültige Datei — kein Trackday Manager Export.'));
+        }
+        if (typeof parsed.version !== 'number') {
+          return reject(new Error('Unbekannte Version — Import abgebrochen.'));
+        }
+        const data = _migrateImport(parsed);
+        resolve(data);
+      } catch {
+        reject(new Error('Datei konnte nicht gelesen werden.'));
+      }
+    };
+    reader.readAsText(file);
+  });
+}
+
+function _migrateImport(imported) {
+  const { version, data } = imported;
+  let vehicles = data.vehicles || [];
+  let sessions = data.sessions || [];
+
+  if (version > DB_VERSION) {
+    throw new Error(`Version ${version} wird von dieser App nicht unterstützt. Bitte App aktualisieren.`);
+  }
+
+  if (version < 2) {
+    sessions = sessions.map(s => _migrateSession(s, version));
+  }
+
+  return { vehicles, sessions, events: data.events || [] };
+}
+
+function applyImport(data, mode) {
+  if (mode === 'replace') {
+    DB.vehicles = data.vehicles;
+    DB.sessions = data.sessions;
+    DB.events = data.events || [];
+  } else {
+    const existingVIds = new Set(DB.vehicles.map(v => v.id));
+    const existingSIds = new Set(DB.sessions.map(s => s.id));
+    const existingEIds = new Set(DB.events.map(e => e.id));
+    data.vehicles.forEach(v => { if (!existingVIds.has(v.id)) DB.vehicles.push(v); });
+    data.sessions.forEach(s => { if (!existingSIds.has(s.id)) DB.sessions.push(s); });
+    (data.events || []).forEach(e => { if (!existingEIds.has(e.id)) DB.events.push(e); });
+  }
+  _saveData();
+}
+
+// ── Init ──
+_loadData();
+
+// ── Predefined tracks ──
+const STRECKEN = [
+  { name: 'Assen IDM Kurs', km: '4.555' },
+  { name: 'Oschersleben', km: '3.667' },
+  { name: 'Mettet', km: '3.850' },
+  { name: 'Rijeka', km: '4.168' },
+  { name: 'Most', km: '4.212' },
+  { name: 'Brünn', km: '5.403' },
+  { name: 'Lausitzring', km: '4.534' },
+  { name: 'Spa', km: '7.004' },
+  { name: 'Zolder', km: '4.011' },
+  { name: 'Wuppertal', km: '' },
+  { name: 'Hagen', km: '' },
+  { name: 'RacelandKart', km: '' },
+  { name: 'Vledderveen', km: '' }
+];
+
+const MESSPUNKTE = ['Kettenspanner', 'Schwinge', 'Achse', 'Rahmenheck'];
+
+const EVENT_TYPEN = [
+  'Fahrwerksservice',
+  'Gabelservice',
+  'Federbein-Service',
+  'Motorrevision',
+  'Reifenwechsel',
+  'Kettenservice',
+  'Reparatur / Unfall',
+  'Umbau',
+  'Sonstiges'
+];
+  </script>
+  <script>
+// ── Screen 1: Fahrzeugübersicht ──
+
+const ScreenFahrzeuge = (() => {
+
+  const expandedIds = new Set();
+  const editIds = new Set();
+  let deleteConfirmId = null;
+
+  function render() {
+    const el = document.getElementById('screen-fahrzeuge');
+    el.innerHTML = `
+      <div class="screen-header">
+        <span class="screen-title">Motorräder</span>
+        <button class="btn btn-primary" id="btn-add-vehicle" style="font-size:13px;padding:8px 14px;min-height:36px;">
+          + Hinzufügen
+        </button>
+      </div>
+      <div class="scroll-content" id="fahrzeuge-list"></div>
+    `;
+    _renderList();
+    document.getElementById('btn-add-vehicle').addEventListener('click', _openAddModal);
+    _attachCardEvents();
+  }
+
+  function _renderList() {
+    const list = document.getElementById('fahrzeuge-list');
+    const vehicles = getVehicles();
+
+    if (!vehicles.length) {
+      list.innerHTML = `
+        <div class="empty-state">
+          <svg class="empty-state-icon" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+            <circle cx="5.5" cy="17.5" r="2.5"/><circle cx="18.5" cy="17.5" r="2.5"/>
+            <path d="M8 17.5h7M2 10l2-5h10l4 5H2z"/><path d="M14 5l2 5"/>
+          </svg>
+          <p class="empty-state-title">Noch kein Motorrad</p>
+          <p class="empty-state-text">Tippe auf „+ Hinzufügen" um dein erstes Motorrad anzulegen.</p>
+        </div>`;
+      return;
+    }
+
+    list.innerHTML = vehicles.map(v => _buildCard(v)).join('');
+  }
+
+  function _buildCard(v) {
+    const isExpanded = expandedIds.has(v.id);
+    const isEdit = editIds.has(v.id);
+    const isDeleteConfirm = deleteConfirmId === v.id;
+    const sessionCount = getSessions(v.id).length;
+
+    if (isEdit) return _buildEditCard(v);
+
+    const umbauten = (v.umbauten || []).map(u =>
+      `<span class="umbau-tag">${_esc(u)}</span>`).join('');
+
+    return `
+      <div class="vehicle-card" id="vcard-${v.id}">
+        <div class="vehicle-card-header" data-toggle="${v.id}">
+          <div>
+            <div class="vehicle-card-title">${_esc(v.name)}</div>
+            <div class="vehicle-card-meta">
+              ${v.year ? v.year + ' · ' : ''}
+              ${v.motor?.hubraum ? v.motor.hubraum + ' · ' : ''}
+              ${v.motor?.leistung ? v.motor.leistung : ''}
+              ${sessionCount ? `· ${sessionCount} Session${sessionCount !== 1 ? 's' : ''}` : ''}
+            </div>
+          </div>
+          <div class="vehicle-card-actions">
+            <button class="btn-icon" data-edit="${v.id}" title="Bearbeiten">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
+            </button>
+            <svg style="color:var(--text-muted);transition:transform 0.2s;transform:rotate(${isExpanded ? '180' : '0'}deg)"
+                 width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </div>
+        </div>
+
+        ${isExpanded ? `
+        <div class="vehicle-card-expand">
+          ${_buildSection('Motor', [
+            ['Hubraum', v.motor?.hubraum],
+            ['Leistung', v.motor?.leistung],
+            ['Drehmoment', v.motor?.drehmoment]
+          ])}
+          ${_buildSection('Fahrwerk', [
+            ['Dämpfer vorne', v.fahrwerk?.daempfer_vorne],
+            ['Dämpfer hinten', v.fahrwerk?.daempfer_hinten],
+            ['Federn vorne', v.fahrwerk?.federn_vorne],
+            ['Federn hinten', v.fahrwerk?.federn_hinten]
+          ])}
+          ${_buildSection('Bremsen', [
+            ['Beläge vorne', v.bremsen?.belaege_vorne],
+            ['Beläge hinten', v.bremsen?.belaege_hinten],
+            ['Scheibe vorne', v.bremsen?.scheibe_vorne],
+            ['Scheibe hinten', v.bremsen?.scheibe_hinten],
+            ['Bias', v.bremsen?.bias]
+          ])}
+          ${_buildSection('Getriebe', [
+            ['Übersetzung', v.getriebe?.uebersetzung],
+            ['Differential', v.getriebe?.differential]
+          ])}
+          ${_buildSection('Gewicht', [
+            ['Leergewicht', v.gewicht?.leergewicht],
+            ['Fahrer', v.gewicht?.fahrer],
+            ['Ballast', v.gewicht?.ballast]
+          ])}
+          ${(v.umbauten && v.umbauten.length) ? `
+          <div class="vehicle-section">
+            <div class="vehicle-section-title">Umbauten</div>
+            <div>${umbauten}</div>
+          </div>` : ''}
+          ${v.notizen ? `
+          <div class="vehicle-section">
+            <div class="vehicle-section-title">Notizen</div>
+            <div style="font-size:14px;color:var(--text-muted);line-height:1.6">${_esc(v.notizen)}</div>
+          </div>` : ''}
+        </div>
+        ` : ''}
+
+        ${isDeleteConfirm ? `
+        <div class="delete-confirm">
+          <div class="delete-confirm-text">
+            Motorrad löschen? Alle ${sessionCount} Session${sessionCount !== 1 ? 's' : ''} werden ebenfalls gelöscht.
+          </div>
+          <div class="delete-confirm-actions">
+            <button class="btn btn-ghost" style="font-size:13px;padding:6px 12px;min-height:36px" data-cancel-delete="${v.id}">Abbrechen</button>
+            <button class="btn btn-danger" style="font-size:13px;padding:6px 12px;min-height:36px" data-confirm-delete="${v.id}">Löschen</button>
+          </div>
+        </div>` : ''}
+      </div>`;
+  }
+
+  function _buildSection(title, fields) {
+    const hasContent = fields.some(([, v]) => v);
+    if (!hasContent) return '';
+    return `
+      <div class="vehicle-section">
+        <div class="vehicle-section-title">${title}</div>
+        <div class="kv-grid">
+          ${fields.filter(([, v]) => v).map(([k, v]) => `
+            <div class="kv-item">
+              <span class="kv-key">${k}</span>
+              <span class="kv-value">${_esc(v)}</span>
+            </div>`).join('')}
+        </div>
+      </div>`;
+  }
+
+  function _buildEditCard(v) {
+    const umbauten = (v.umbauten || []);
+    return `
+      <div class="vehicle-card" id="vcard-${v.id}">
+        <div style="padding:16px">
+          <div style="font-family:var(--font-display);font-size:18px;font-weight:700;margin-bottom:16px;color:var(--accent)">
+            Bearbeiten
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">Name *</label>
+            <input class="field-input" id="edit-name-${v.id}" value="${_esc(v.name)}" placeholder="z.B. Honda CBR 1000RR">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Baujahr</label>
+            <input class="field-input" id="edit-year-${v.id}" value="${_esc(v.year)}" placeholder="z.B. 2022" type="number">
+          </div>
+
+          <div class="section-title">Motor</div>
+          <div class="field-row">
+            <div class="field-group"><label class="field-label">Hubraum</label>
+              <input class="field-input" id="edit-motor-hubraum-${v.id}" value="${_esc(v.motor?.hubraum)}" placeholder="999 cc"></div>
+            <div class="field-group"><label class="field-label">Leistung</label>
+              <input class="field-input" id="edit-motor-leistung-${v.id}" value="${_esc(v.motor?.leistung)}" placeholder="214 PS"></div>
+          </div>
+          <div class="field-group"><label class="field-label">Drehmoment</label>
+            <input class="field-input" id="edit-motor-drehmoment-${v.id}" value="${_esc(v.motor?.drehmoment)}" placeholder="113 Nm"></div>
+
+          <div class="section-title">Fahrwerk</div>
+          <div class="field-row">
+            <div class="field-group"><label class="field-label">Dämpfer vorne</label>
+              <input class="field-input" id="edit-fw-dv-${v.id}" value="${_esc(v.fahrwerk?.daempfer_vorne)}" placeholder="Öhlins TTX"></div>
+            <div class="field-group"><label class="field-label">Dämpfer hinten</label>
+              <input class="field-input" id="edit-fw-dh-${v.id}" value="${_esc(v.fahrwerk?.daempfer_hinten)}" placeholder="Öhlins TTX"></div>
+          </div>
+          <div class="field-row">
+            <div class="field-group"><label class="field-label">Federn vorne</label>
+              <input class="field-input" id="edit-fw-fv-${v.id}" value="${_esc(v.fahrwerk?.federn_vorne)}"></div>
+            <div class="field-group"><label class="field-label">Federn hinten</label>
+              <input class="field-input" id="edit-fw-fh-${v.id}" value="${_esc(v.fahrwerk?.federn_hinten)}"></div>
+          </div>
+
+          <div class="section-title">Bremsen</div>
+          <div class="field-row">
+            <div class="field-group"><label class="field-label">Beläge vorne</label>
+              <input class="field-input" id="edit-br-bv-${v.id}" value="${_esc(v.bremsen?.belaege_vorne)}" placeholder="Brembo Z04"></div>
+            <div class="field-group"><label class="field-label">Beläge hinten</label>
+              <input class="field-input" id="edit-br-bh-${v.id}" value="${_esc(v.bremsen?.belaege_hinten)}"></div>
+          </div>
+          <div class="field-row">
+            <div class="field-group"><label class="field-label">Scheibe vorne</label>
+              <input class="field-input" id="edit-br-sv-${v.id}" value="${_esc(v.bremsen?.scheibe_vorne)}" placeholder="320 mm"></div>
+            <div class="field-group"><label class="field-label">Scheibe hinten</label>
+              <input class="field-input" id="edit-br-sh-${v.id}" value="${_esc(v.bremsen?.scheibe_hinten)}" placeholder="220 mm"></div>
+          </div>
+          <div class="field-group"><label class="field-label">Bremsbalance</label>
+            <input class="field-input" id="edit-br-bias-${v.id}" value="${_esc(v.bremsen?.bias)}" placeholder="70/30"></div>
+
+          <div class="section-title">Gewicht</div>
+          <div class="field-row">
+            <div class="field-group"><label class="field-label">Leergewicht</label>
+              <input class="field-input" id="edit-gew-leer-${v.id}" value="${_esc(v.gewicht?.leergewicht)}" placeholder="195 kg"></div>
+            <div class="field-group"><label class="field-label">Fahrer</label>
+              <input class="field-input" id="edit-gew-fahr-${v.id}" value="${_esc(v.gewicht?.fahrer)}" placeholder="75 kg"></div>
+          </div>
+          <div class="field-group"><label class="field-label">Ballast</label>
+            <input class="field-input" id="edit-gew-ball-${v.id}" value="${_esc(v.gewicht?.ballast)}"></div>
+
+          <div class="section-title">Umbauten</div>
+          <div id="umbauten-list-${v.id}">
+            ${umbauten.map((u, i) => `
+              <div class="umbau-item-edit" id="umbau-item-${v.id}-${i}">
+                <input class="field-input" value="${_esc(u)}" data-umbau="${v.id}" data-idx="${i}">
+                <button class="btn-remove-umbau" data-remove-umbau="${v.id}" data-idx="${i}">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </button>
+              </div>`).join('')}
+          </div>
+          <button class="btn btn-ghost btn-full mt-8" id="btn-add-umbau-${v.id}" style="font-size:13px;margin-top:6px">
+            + Umbau hinzufügen
+          </button>
+
+          <div class="section-title">Notizen</div>
+          <div class="field-group">
+            <textarea class="field-input" id="edit-notizen-${v.id}" placeholder="Allgemeine Anmerkungen…">${_esc(v.notizen)}</textarea>
+          </div>
+
+          <div class="divider"></div>
+          <div class="row-between">
+            <button class="btn btn-danger" data-delete-vehicle="${v.id}" style="font-size:13px;padding:8px 14px">Löschen…</button>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-ghost" data-cancel-edit="${v.id}" style="font-size:13px;padding:8px 14px">Abbrechen</button>
+              <button class="btn btn-primary" data-save-edit="${v.id}" style="font-size:13px;padding:8px 14px">Speichern</button>
+            </div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  function _attachCardEvents() {
+    const list = document.getElementById('fahrzeuge-list');
+
+    list.addEventListener('click', e => {
+      const toggle = e.target.closest('[data-toggle]');
+      if (toggle && !e.target.closest('[data-edit]')) {
+        const id = toggle.dataset.toggle;
+        expandedIds.has(id) ? expandedIds.delete(id) : expandedIds.add(id);
+        _renderList();
+        return;
+      }
+
+      const editBtn = e.target.closest('[data-edit]');
+      if (editBtn) {
+        const id = editBtn.dataset.edit;
+        editIds.add(id);
+        expandedIds.delete(id);
+        _renderList();
+        _attachEditEvents(id);
+        return;
+      }
+
+      const cancelEdit = e.target.closest('[data-cancel-edit]');
+      if (cancelEdit) {
+        editIds.delete(cancelEdit.dataset.cancelEdit);
+        _renderList();
+        return;
+      }
+
+      const saveEdit = e.target.closest('[data-save-edit]');
+      if (saveEdit) {
+        _saveEdit(saveEdit.dataset.saveEdit);
+        return;
+      }
+
+      const deleteBtn = e.target.closest('[data-delete-vehicle]');
+      if (deleteBtn) {
+        deleteConfirmId = deleteBtn.dataset.deleteVehicle;
+        editIds.delete(deleteConfirmId);
+        _renderList();
+        return;
+      }
+
+      const cancelDel = e.target.closest('[data-cancel-delete]');
+      if (cancelDel) {
+        deleteConfirmId = null;
+        _renderList();
+        return;
+      }
+
+      const confirmDel = e.target.closest('[data-confirm-delete]');
+      if (confirmDel) {
+        deleteVehicle(confirmDel.dataset.confirmDelete);
+        deleteConfirmId = null;
+        editIds.delete(confirmDel.dataset.confirmDelete);
+        _renderList();
+        return;
+      }
+    });
+  }
+
+  function _attachEditEvents(id) {
+    const addUmbauBtn = document.getElementById(`btn-add-umbau-${id}`);
+    if (addUmbauBtn) {
+      addUmbauBtn.addEventListener('click', () => {
+        const container = document.getElementById(`umbauten-list-${id}`);
+        const idx = container.children.length;
+        const div = document.createElement('div');
+        div.className = 'umbau-item-edit';
+        div.id = `umbau-item-${id}-${idx}`;
+        div.innerHTML = `
+          <input class="field-input" value="" data-umbau="${id}" data-idx="${idx}">
+          <button class="btn-remove-umbau" data-remove-umbau="${id}" data-idx="${idx}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>`;
+        container.appendChild(div);
+        div.querySelector('input').addEventListener('click', e => e.stopPropagation());
+        div.querySelector('button').addEventListener('click', e => {
+          e.stopPropagation();
+          div.remove();
+        });
+      });
+    }
+
+    document.querySelectorAll(`[data-remove-umbau="${id}"]`).forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const item = btn.closest('.umbau-item-edit');
+        item.remove();
+      });
+    });
+
+    document.querySelectorAll(`#vcard-${id} input, #vcard-${id} textarea, #vcard-${id} select`).forEach(el => {
+      el.addEventListener('click', e => e.stopPropagation());
+    });
+  }
+
+  function _saveEdit(id) {
+    const v = getVehicle(id);
+    if (!v) return;
+
+    const g = (sel) => (document.getElementById(sel)?.value || '').trim();
+
+    const umbauten = Array.from(document.querySelectorAll(`[data-umbau="${id}"]`))
+      .map(inp => inp.value.trim())
+      .filter(Boolean);
+
+    updateVehicle(id, {
+      name: g(`edit-name-${id}`),
+      year: g(`edit-year-${id}`),
+      motor: {
+        hubraum: g(`edit-motor-hubraum-${id}`),
+        leistung: g(`edit-motor-leistung-${id}`),
+        drehmoment: g(`edit-motor-drehmoment-${id}`)
+      },
+      fahrwerk: {
+        daempfer_vorne: g(`edit-fw-dv-${id}`),
+        daempfer_hinten: g(`edit-fw-dh-${id}`),
+        federn_vorne: g(`edit-fw-fv-${id}`),
+        federn_hinten: g(`edit-fw-fh-${id}`)
+      },
+      bremsen: {
+        belaege_vorne: g(`edit-br-bv-${id}`),
+        belaege_hinten: g(`edit-br-bh-${id}`),
+        scheibe_vorne: g(`edit-br-sv-${id}`),
+        scheibe_hinten: g(`edit-br-sh-${id}`),
+        bias: g(`edit-br-bias-${id}`)
+      },
+      gewicht: {
+        leergewicht: g(`edit-gew-leer-${id}`),
+        fahrer: g(`edit-gew-fahr-${id}`),
+        ballast: g(`edit-gew-ball-${id}`)
+      },
+      umbauten,
+      notizen: g(`edit-notizen-${id}`)
+    });
+
+    editIds.delete(id);
+    expandedIds.add(id);
+    _renderList();
+  }
+
+  function _openAddModal() {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+      <div class="modal-sheet">
+        <div class="modal-handle"></div>
+        <div class="modal-title">Neues Motorrad</div>
+        <div class="field-group">
+          <label class="field-label">Name *</label>
+          <input class="field-input" id="modal-add-name" placeholder="z.B. Honda CBR 1000RR" autofocus>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Baujahr</label>
+          <input class="field-input" id="modal-add-year" type="number" placeholder="z.B. 2022">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Hubraum</label>
+          <input class="field-input" id="modal-add-hub" placeholder="z.B. 999 cc">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Leistung</label>
+          <input class="field-input" id="modal-add-lei" placeholder="z.B. 214 PS">
+        </div>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:20px">
+          Alle weiteren Details können später ergänzt werden.
+        </p>
+        <div class="row-between">
+          <button class="btn btn-ghost" id="modal-cancel" style="flex:1">Abbrechen</button>
+          <button class="btn btn-primary" id="modal-save" style="flex:1">Hinzufügen</button>
+        </div>
+      </div>`;
+
+    document.body.appendChild(overlay);
+
+    overlay.querySelector('#modal-cancel').addEventListener('click', () => overlay.remove());
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+
+    overlay.querySelector('#modal-save').addEventListener('click', () => {
+      const name = document.getElementById('modal-add-name').value.trim();
+      if (!name) {
+        document.getElementById('modal-add-name').style.borderColor = '#ff4444';
+        return;
+      }
+      addVehicle({
+        name,
+        year: document.getElementById('modal-add-year').value.trim(),
+        motor: {
+          hubraum: document.getElementById('modal-add-hub').value.trim(),
+          leistung: document.getElementById('modal-add-lei').value.trim()
+        }
+      });
+      overlay.remove();
+      _renderList();
+    });
+
+    setTimeout(() => document.getElementById('modal-add-name')?.focus(), 100);
+  }
+
+  function _esc(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  return { render };
+})();
+  </script>
+  <script>
+// ── Screen Wizard: Schritte 1–3 (Fahrzeug → Bedingung → Strecke) ──
+
+const ScreenWizard = (() => {
+
+  const state = {
+    step: 1,
+    vehicleId: null,
+    bedingung: 'trocken',
+    datum: '',
+    uhrzeit: '',
+    temperatur: { luft: '', asphalt: '' },
+    strecke: null,
+    streckeKm: '',
+    eigeneStrecke: false
+  };
+
+  function start() {
+    state.step = 1;
+    state.vehicleId = null;
+    state.bedingung = 'trocken';
+    const now = new Date();
+    state.datum = now.toISOString().slice(0, 10);
+    state.uhrzeit = now.toTimeString().slice(0, 5);
+    state.temperatur = { luft: '', asphalt: '' };
+    state.strecke = null;
+    state.streckeKm = '';
+    state.eigeneStrecke = false;
+
+    App.navigate('wizard');
+  }
+
+  function render() {
+    switch (state.step) {
+      case 1: _renderStep1(); break;
+      case 2: _renderStep2(); break;
+      case 3: _renderStep3(); break;
+    }
+  }
+
+  // ── Step 1: Fahrzeug auswählen ──
+
+  function _renderStep1() {
+    const el = document.getElementById('screen-wizard');
+    const vehicles = getVehicles();
+
+    el.innerHTML = `
+      <div class="screen-header">
+        <button class="btn-icon" id="wizard-back">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+        </button>
+        <span class="screen-title">Neue Session</span>
+        <div style="width:44px"></div>
+      </div>
+      <div class="wizard-step-indicator">
+        <div class="wizard-dot active"></div>
+        <div class="wizard-dot"></div>
+        <div class="wizard-dot"></div>
+      </div>
+      <div class="scroll-content" style="padding-top:16px">
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px">Welches Motorrad fährst du heute?</p>
+        ${vehicles.length === 0 ? `
+          <div class="empty-state" style="padding:40px 0">
+            <p class="empty-state-title">Kein Motorrad vorhanden</p>
+            <p class="empty-state-text">Lege zuerst ein Motorrad in der Motorräder-Ansicht an.</p>
+            <button class="btn btn-primary mt-16" id="wizard-go-vehicles">Zu Motorräder</button>
+          </div>` : vehicles.map(v => `
+          <div class="list-item ${state.vehicleId === v.id ? 'active' : ''}" data-select-vehicle="${v.id}">
+            <div>
+              <div class="list-item-name">${_esc(v.name)}</div>
+              <div class="list-item-meta">${[v.year, v.motor?.hubraum, v.motor?.leistung].filter(Boolean).join(' · ')}</div>
+            </div>
+            ${state.vehicleId === v.id ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>` : ''}
+          </div>`).join('')}
+        <div style="height:20px"></div>
+        ${vehicles.length > 0 ? `
+        <button class="btn btn-primary btn-full" id="wizard-next-1" ${state.vehicleId ? '' : 'disabled'} style="opacity:${state.vehicleId ? 1 : 0.4}">
+          Weiter
+        </button>` : ''}
+      </div>`;
+
+    document.getElementById('wizard-back').addEventListener('click', () => App.navigate('fahrzeuge'));
+    document.getElementById('wizard-go-vehicles')?.addEventListener('click', () => App.navigate('fahrzeuge'));
+
+    el.querySelectorAll('[data-select-vehicle]').forEach(item => {
+      item.addEventListener('click', () => {
+        state.vehicleId = item.dataset.selectVehicle;
+        _renderStep1();
+      });
+    });
+
+    document.getElementById('wizard-next-1')?.addEventListener('click', () => {
+      if (!state.vehicleId) return;
+      state.step = 2;
+      render();
+    });
+  }
+
+  // ── Step 2: Bedingung, Datum, Temperaturen ──
+
+  function _renderStep2() {
+    const el = document.getElementById('screen-wizard');
+
+    el.innerHTML = `
+      <div class="screen-header">
+        <button class="btn-icon" id="wizard-back">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+        </button>
+        <span class="screen-title">Bedingungen</span>
+        <div style="width:44px"></div>
+      </div>
+      <div class="wizard-step-indicator">
+        <div class="wizard-dot done"></div>
+        <div class="wizard-dot active"></div>
+        <div class="wizard-dot"></div>
+      </div>
+      <div class="scroll-content" style="padding-top:16px">
+
+        <p class="field-label" style="margin-bottom:10px">Streckenbedingung</p>
+        <div class="toggle-group">
+          <button class="toggle-btn ${state.bedingung === 'trocken' ? 'active' : ''}" data-condition="trocken">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/>
+              <line x1="12" y1="20" x2="12" y2="22"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="2" y1="12" x2="4" y2="12"/>
+              <line x1="20" y1="12" x2="22" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+            </svg>
+            Trocken
+          </button>
+          <button class="toggle-btn ${state.bedingung === 'nass' ? 'active' : ''}" data-condition="nass">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <line x1="8" y1="19" x2="8" y2="21"/><line x1="8" y1="13" x2="8" y2="15"/>
+              <line x1="16" y1="19" x2="16" y2="21"/><line x1="16" y1="13" x2="16" y2="15"/>
+              <line x1="12" y1="21" x2="12" y2="23"/><line x1="12" y1="15" x2="12" y2="17"/>
+              <path d="M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25"/>
+            </svg>
+            Nass
+          </button>
+        </div>
+
+        <div class="field-row">
+          <div class="field-group">
+            <label class="field-label">Datum</label>
+            <input class="field-input" type="date" id="wiz-datum" value="${state.datum}">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Uhrzeit</label>
+            <input class="field-input" type="time" id="wiz-uhrzeit" value="${state.uhrzeit}">
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field-group">
+            <label class="field-label">Lufttemperatur (°C)</label>
+            <input class="field-input" type="number" id="wiz-luft" value="${state.temperatur.luft}" placeholder="z.B. 22">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Asphalttemperatur (°C)</label>
+            <input class="field-input" type="number" id="wiz-asphalt" value="${state.temperatur.asphalt}" placeholder="z.B. 38">
+          </div>
+        </div>
+
+        <div style="height:20px"></div>
+        <button class="btn btn-primary btn-full" id="wizard-next-2">Weiter</button>
+      </div>`;
+
+    document.getElementById('wizard-back').addEventListener('click', () => { state.step = 1; render(); });
+
+    el.querySelectorAll('[data-condition]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        state.bedingung = btn.dataset.condition;
+        el.querySelectorAll('[data-condition]').forEach(b => b.classList.toggle('active', b.dataset.condition === state.bedingung));
+      });
+    });
+
+    document.getElementById('wizard-next-2').addEventListener('click', () => {
+      state.datum = document.getElementById('wiz-datum').value;
+      state.uhrzeit = document.getElementById('wiz-uhrzeit').value;
+      state.temperatur.luft = document.getElementById('wiz-luft').value;
+      state.temperatur.asphalt = document.getElementById('wiz-asphalt').value;
+      state.step = 3;
+      render();
+    });
+  }
+
+  // ── Step 3: Strecke auswählen ──
+
+  function _renderStep3() {
+    const el = document.getElementById('screen-wizard');
+
+    el.innerHTML = `
+      <div class="screen-header">
+        <button class="btn-icon" id="wizard-back">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+        </button>
+        <span class="screen-title">Strecke</span>
+        <div style="width:44px"></div>
+      </div>
+      <div class="wizard-step-indicator">
+        <div class="wizard-dot done"></div>
+        <div class="wizard-dot done"></div>
+        <div class="wizard-dot active"></div>
+      </div>
+      <div class="scroll-content" style="padding-top:16px">
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px">Welche Strecke fährst du?</p>
+
+        ${STRECKEN.map(s => `
+          <div class="list-item ${state.strecke === s.name && !state.eigeneStrecke ? 'active' : ''}" data-select-track="${_esc(s.name)}" data-km="${s.km}">
+            <span class="list-item-name">${_esc(s.name)}</span>
+            <span class="list-item-meta">${s.km} km</span>
+          </div>`).join('')}
+
+        <div class="list-item ${state.eigeneStrecke ? 'active' : ''}" id="btn-eigene-strecke">
+          <span class="list-item-name">Eigene Strecke…</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+        </div>
+
+        <div id="eigene-strecke-form" style="display:${state.eigeneStrecke ? 'block' : 'none'};margin-top:8px">
+          <div class="field-row">
+            <div class="field-group">
+              <label class="field-label">Streckenname</label>
+              <input class="field-input" id="eigene-name" value="${state.eigeneStrecke ? _esc(state.strecke || '') : ''}" placeholder="Streckenname">
+            </div>
+            <div class="field-group">
+              <label class="field-label">Länge (km)</label>
+              <input class="field-input" id="eigene-km" value="${state.eigeneStrecke ? _esc(state.streckeKm || '') : ''}" placeholder="z.B. 4.200" type="number" step="0.001">
+            </div>
+          </div>
+        </div>
+
+        <div style="height:20px"></div>
+        <button class="btn btn-primary btn-full" id="wizard-next-3" ${state.strecke || state.eigeneStrecke ? '' : 'disabled'} style="opacity:${state.strecke || state.eigeneStrecke ? 1 : 0.4}">
+          Setup erfassen
+        </button>
+      </div>`;
+
+    document.getElementById('wizard-back').addEventListener('click', () => { state.step = 2; render(); });
+
+    el.querySelectorAll('[data-select-track]').forEach(item => {
+      item.addEventListener('click', () => {
+        state.strecke = item.dataset.selectTrack;
+        state.streckeKm = item.dataset.km;
+        state.eigeneStrecke = false;
+        _renderStep3();
+      });
+    });
+
+    document.getElementById('btn-eigene-strecke').addEventListener('click', () => {
+      state.eigeneStrecke = true;
+      state.strecke = '';
+      state.streckeKm = '';
+      _renderStep3();
+      setTimeout(() => document.getElementById('eigene-name')?.focus(), 100);
+    });
+
+    document.getElementById('wizard-next-3').addEventListener('click', () => {
+      if (state.eigeneStrecke) {
+        const name = document.getElementById('eigene-name')?.value.trim();
+        const km = document.getElementById('eigene-km')?.value.trim();
+        if (!name) { document.getElementById('eigene-name').style.borderColor = '#ff4444'; return; }
+        state.strecke = name;
+        state.streckeKm = km;
+      }
+      if (!state.strecke) return;
+      ScreenSetup.startWithWizardState(state);
+      App.navigate('setup');
+    });
+  }
+
+  function _esc(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  return { start, render };
+})();
+  </script>
+  <script>
+// ── Screen 4: Setup-Erfassung ──
+
+const ScreenSetup = (() => {
+
+  let _wizardState = null;
+  let _editSession = null;
+
+  function startWithWizardState(ws) {
+    _editSession = null;
+    _wizardState = { ...ws };
+  }
+
+  function startWithSession(session) {
+    _editSession = session;
+    _wizardState = {
+      vehicleId: session.vehicleId,
+      datum: session.datum,
+      uhrzeit: session.uhrzeit || '',
+      strecke: session.strecke,
+      streckeKm: session.streckeKm || '',
+      bedingung: session.bedingung || 'trocken',
+      temperatur: session.temperatur || {}
+    };
+  }
+
+  function render() {
+    if (!_wizardState) { App.navigate('fahrzeuge'); return; }
+
+    const vehicle = getVehicle(_wizardState.vehicleId);
+    if (!vehicle) { App.navigate('fahrzeuge'); return; }
+
+    const last = _editSession ? null : getLastSessionForVehicle(_wizardState.vehicleId);
+    const pre = _editSession || last || {};
+
+    const el = document.getElementById('screen-setup');
+    el.innerHTML = `
+      <div class="screen-header">
+        <button class="btn-icon" id="setup-back">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+        </button>
+        <div style="text-align:center">
+          <div style="font-family:var(--font-display);font-size:15px;font-weight:700">${_esc(vehicle.name)}</div>
+          <div style="font-size:11px;color:var(--text-muted)">${_editSession ? 'Session bearbeiten' : _esc(_wizardState.strecke) + ' · ' + (_wizardState.bedingung === 'nass' ? '🌧 Nass' : '☀ Trocken')}</div>
+        </div>
+        <div style="width:44px"></div>
+      </div>
+
+      <div class="scroll-content">
+        ${last ? `<div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;padding:8px 12px;background:var(--surface-2);border-radius:var(--radius-sm);border:1px solid var(--border)">
+          Vorausgefüllt aus letzter Session vom ${_formatDate(last.datum)}
+        </div>` : ''}
+
+        ${_editSession ? `
+        <div class="setup-section">
+          <div class="setup-section-header">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            Basisdaten
+          </div>
+          <div class="setup-section-body">
+            <div class="field-row">
+              <div class="field-group">
+                <label class="field-label">Datum</label>
+                <input class="field-input" type="date" id="edit-datum" value="${_esc(_editSession.datum || '')}">
+              </div>
+              <div class="field-group">
+                <label class="field-label">Uhrzeit</label>
+                <input class="field-input" type="time" id="edit-uhrzeit" value="${_esc(_editSession.uhrzeit || '')}">
+              </div>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Strecke</label>
+              <input class="field-input" id="edit-strecke" list="edit-strecke-list" value="${_esc(_editSession.strecke || '')}">
+              <datalist id="edit-strecke-list">
+                ${STRECKEN.map(s => `<option value="${_esc(s.name)}">`).join('')}
+              </datalist>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Bedingung</label>
+              <select class="field-input" id="edit-bedingung">
+                <option value="trocken" ${(_editSession.bedingung || 'trocken') === 'trocken' ? 'selected' : ''}>☀ Trocken</option>
+                <option value="nass" ${(_editSession.bedingung || '') === 'nass' ? 'selected' : ''}>🌧 Nass</option>
+              </select>
+            </div>
+            <div class="field-row">
+              <div class="field-group">
+                <label class="field-label">Lufttemperatur (°C)</label>
+                <input class="field-input" type="number" id="edit-luft" value="${_editSession.temperatur?.luft ?? ''}">
+              </div>
+              <div class="field-group">
+                <label class="field-label">Asphalttemperatur (°C)</label>
+                <input class="field-input" type="number" id="edit-asphalt" value="${_editSession.temperatur?.asphalt ?? ''}">
+              </div>
+            </div>
+          </div>
+        </div>` : ''}
+
+        <!-- Gabel -->
+        <div class="setup-section">
+          <div class="setup-section-header">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="2" x2="12" y2="22"/><line x1="8" y1="6" x2="16" y2="6"/>
+            </svg>
+            Gabel (vorne)
+          </div>
+          <div class="setup-section-body">
+            <div class="field-row">
+              <div class="field-group">
+                <label class="field-label">Negativfederweg (mm)</label>
+                <input class="field-input" type="number" id="gabel-negfed" value="${pre.gabel?.negativfederweg_mm ?? ''}" placeholder="z.B. 28">
+              </div>
+              <div class="field-group">
+                <label class="field-label">Durchstreckung (mm)</label>
+                <input class="field-input" type="number" id="gabel-durch" value="${pre.gabel?.durchstreckung_mm ?? ''}" placeholder="z.B. 12">
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field-group">
+                <label class="field-label">Federvorspannung (Umdr. Zu)</label>
+                <input class="field-input" type="number" step="0.5" id="gabel-federvsp" value="${pre.gabel?.federvorspannung ?? ''}" placeholder="optional">
+              </div>
+              <div class="field-group"></div>
+            </div>
+            <div class="field-row">
+              <div class="field-group">
+                <label class="field-label">Druckstufe (Klicks Offen)</label>
+                <input class="field-input" type="number" id="gabel-druck" value="${pre.gabel?.druckstufe_klicks ?? ''}" placeholder="z.B. 12">
+              </div>
+              <div class="field-group">
+                <label class="field-label">Zugstufe (Klicks Offen)</label>
+                <input class="field-input" type="number" id="gabel-zug" value="${pre.gabel?.zugstufe_klicks ?? ''}" placeholder="z.B. 8">
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field-group">
+                <label class="field-label">Öltyp</label>
+                <input class="field-input" type="number" id="gabel-oeltyp" value="${pre.gabel?.oeltyp ?? ''}" placeholder="z.B. 5">
+              </div>
+              <div class="field-group">
+                <label class="field-label">Öllevel (mm)</label>
+                <input class="field-input" type="number" id="gabel-oelstand" value="${pre.gabel?.oelstand_mm ?? ''}" placeholder="z.B. 110">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Federbein -->
+        <div class="setup-section">
+          <div class="setup-section-header">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="2" x2="12" y2="22"/><path d="M8 8h8M8 12h8M8 16h8"/>
+            </svg>
+            Federbein (hinten)
+          </div>
+          <div class="setup-section-body">
+            <div class="field-row">
+              <div class="field-group">
+                <label class="field-label">Negativfederweg (mm)</label>
+                <input class="field-input" type="number" id="fb-negfed" value="${pre.federbein?.negativfederweg_mm ?? ''}" placeholder="z.B. 22">
+              </div>
+              <div class="field-group">
+                <label class="field-label">Höhe (mm)</label>
+                <input class="field-input" type="number" id="fb-hoehe" value="${pre.federbein?.hoehe_mm ?? ''}" placeholder="z.B. 820">
+              </div>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Messpunkt</label>
+              <input class="field-input" id="fb-messpunkt" value="${_esc(pre.federbein?.messpunkt || '')}" placeholder="z.B. Kettenspanner, Schwinge…">
+            </div>
+            <div class="field-row">
+              <div class="field-group">
+                <label class="field-label">Federvorspannung (Umdr. Zu)</label>
+                <input class="field-input" type="number" step="0.5" id="fb-federvsp" value="${pre.federbein?.federvorspannung ?? ''}" placeholder="optional">
+              </div>
+              <div class="field-group"></div>
+            </div>
+            <div class="field-row">
+              <div class="field-group">
+                <label class="field-label">Druckstufe (Klicks Offen)</label>
+                <input class="field-input" type="number" id="fb-druck" value="${pre.federbein?.druckstufe_klicks ?? ''}" placeholder="z.B. 10">
+              </div>
+              <div class="field-group">
+                <label class="field-label">Zugstufe (Klicks Offen)</label>
+                <input class="field-input" type="number" id="fb-zug" value="${pre.federbein?.zugstufe_klicks ?? ''}" placeholder="z.B. 6">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sekundärübersetzung -->
+        <div class="setup-section">
+          <div class="setup-section-header">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="5" r="2"/><circle cx="12" cy="19" r="2"/>
+              <line x1="12" y1="7" x2="12" y2="17"/>
+            </svg>
+            Sekundärübersetzung
+          </div>
+          <div class="setup-section-body">
+            <div class="field-row">
+              <div class="field-group">
+                <label class="field-label">Ritzel (Zähne)</label>
+                <input class="field-input" type="number" id="sek-ritzel" value="${pre.sekundaer?.ritzel ?? ''}" placeholder="z.B. 16">
+              </div>
+              <div class="field-group">
+                <label class="field-label">Kettenrad (Zähne)</label>
+                <input class="field-input" type="number" id="sek-kettenrad" value="${pre.sekundaer?.kettenrad ?? ''}" placeholder="z.B. 42">
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field-group">
+                <label class="field-label">Kettenlänge (Glieder)</label>
+                <input class="field-input" type="number" id="sek-kettenlaenge" value="${pre.sekundaer?.kettenlaenge ?? ''}" placeholder="z.B. 112">
+              </div>
+              <div class="field-group">
+                <label class="field-label">Übersetzung</label>
+                <div class="field-input" id="sek-ratio" style="color:var(--accent);font-family:var(--font-display);font-size:18px;font-weight:700;display:flex;align-items:center">—</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Reifen Vorne -->
+        <div class="setup-section">
+          <div class="setup-section-header">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/>
+            </svg>
+            Reifen Vorne
+          </div>
+          <div class="setup-section-body">
+            <div class="field-row">
+              <div class="field-group">
+                <label class="field-label">Hersteller</label>
+                <input class="field-input" id="reifen-v-hersteller" value="${_esc(pre.reifen?.vorne?.hersteller || '')}" placeholder="z.B. Pirelli">
+              </div>
+              <div class="field-group">
+                <label class="field-label">Modell</label>
+                <input class="field-input" id="reifen-v-modell" value="${_esc(pre.reifen?.vorne?.modell || '')}" placeholder="z.B. Diablo SC">
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field-group">
+                <label class="field-label">Compound</label>
+                <input class="field-input" id="reifen-v-compound" value="${_esc(pre.reifen?.vorne?.compound || '')}" placeholder="z.B. SC1">
+              </div>
+              <div class="field-group">
+                <label class="field-label">Druck (bar)</label>
+                <input class="field-input" type="number" step="0.01" id="reifen-v-druck" value="${pre.reifen?.vorne?.druck ?? ''}" placeholder="z.B. 2.10">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Reifen Hinten -->
+        <div class="setup-section">
+          <div class="setup-section-header">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/>
+            </svg>
+            Reifen Hinten
+          </div>
+          <div class="setup-section-body">
+            <div class="field-row">
+              <div class="field-group">
+                <label class="field-label">Hersteller</label>
+                <input class="field-input" id="reifen-h-hersteller" value="${_esc(pre.reifen?.hinten?.hersteller || '')}" placeholder="z.B. Pirelli">
+              </div>
+              <div class="field-group">
+                <label class="field-label">Modell</label>
+                <input class="field-input" id="reifen-h-modell" value="${_esc(pre.reifen?.hinten?.modell || '')}" placeholder="z.B. Diablo SC">
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field-group">
+                <label class="field-label">Compound</label>
+                <input class="field-input" id="reifen-h-compound" value="${_esc(pre.reifen?.hinten?.compound || '')}" placeholder="z.B. SC0">
+              </div>
+              <div class="field-group">
+                <label class="field-label">Druck (bar)</label>
+                <input class="field-input" type="number" step="0.01" id="reifen-h-druck" value="${pre.reifen?.hinten?.druck ?? ''}" placeholder="z.B. 1.90">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Elektronik -->
+        <div class="setup-section">
+          <div class="setup-section-header">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+            </svg>
+            Elektronik
+          </div>
+          <div class="setup-section-body">
+            <div class="field-row">
+              <div class="field-group">
+                <label class="field-label">TC Stufe</label>
+                <input class="field-input" type="number" id="elek-tc-stufe" value="${pre.elektronik?.tc_stufe ?? ''}" placeholder="z.B. 3">
+              </div>
+              <div class="field-group">
+                <label class="field-label">Modus</label>
+                <input class="field-input" id="elek-tc-modus" value="${_esc(pre.elektronik?.tc_modus ?? '')}" placeholder="z.B. A, Sport, 2">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bestzeit -->
+        <div class="setup-section">
+          <div class="setup-section-header">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/>
+            </svg>
+            Bestzeit
+          </div>
+          <div class="setup-section-body">
+            <div class="field-group">
+              <label class="field-label">Zeit (MM:SS.mmm)</label>
+              <input class="field-input bestzeit-input" id="setup-bestzeit" value="${_esc(pre.bestzeit || '')}" placeholder="2:04.381" inputmode="decimal">
+              <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Format: Minuten:Sekunden.Millisekunden</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notiz -->
+        <div class="setup-section">
+          <div class="setup-section-header">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+            </svg>
+            Notiz
+          </div>
+          <div class="setup-section-body">
+            <textarea class="field-input" id="setup-notiz" placeholder="Was hat sich verändert? Warum diese Einstellung?" style="min-height:120px">${_esc(pre.notiz || '')}</textarea>
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-full" id="setup-save" style="margin-top:8px;margin-bottom:8px">
+          ${_editSession ? 'Änderungen speichern' : 'Session speichern'}
+        </button>
+        <div style="height:8px"></div>
+      </div>`;
+
+    document.getElementById('setup-back').addEventListener('click', () => {
+      if (_editSession) {
+        _editSession = null;
+        _wizardState = null;
+        App.navigate('zeiten');
+      } else {
+        App.navigate('wizard');
+        ScreenWizard.render();
+      }
+    });
+
+    document.getElementById('setup-save').addEventListener('click', _save);
+
+    ['sek-ritzel', 'sek-kettenrad'].forEach(id => {
+      document.getElementById(id)?.addEventListener('input', _updateRatio);
+    });
+    _updateRatio();
+  }
+
+  function _updateRatio() {
+    const ritzel = parseFloat(document.getElementById('sek-ritzel')?.value);
+    const kettenrad = parseFloat(document.getElementById('sek-kettenrad')?.value);
+    const el = document.getElementById('sek-ratio');
+    if (!el) return;
+    el.textContent = (ritzel > 0 && kettenrad > 0)
+      ? (kettenrad / ritzel).toFixed(3)
+      : '—';
+  }
+
+  function _save() {
+    const g = (id) => document.getElementById(id)?.value?.trim() || '';
+    const n = (id) => { const v = document.getElementById(id)?.value; return v !== '' && v !== undefined ? parseFloat(v) : ''; };
+
+    const isEdit = !!_editSession;
+    const sessionData = {
+      vehicleId: _wizardState.vehicleId,
+      datum: isEdit ? (g('edit-datum') || _editSession.datum) : _wizardState.datum,
+      uhrzeit: isEdit ? g('edit-uhrzeit') : _wizardState.uhrzeit,
+      strecke: isEdit ? (g('edit-strecke') || _editSession.strecke) : _wizardState.strecke,
+      streckeKm: isEdit ? _editSession.streckeKm : _wizardState.streckeKm,
+      bedingung: isEdit ? (document.getElementById('edit-bedingung')?.value || 'trocken') : _wizardState.bedingung,
+      temperatur: {
+        luft: isEdit ? n('edit-luft') : (n('wiz-luft') || _wizardState.temperatur?.luft || ''),
+        asphalt: isEdit ? n('edit-asphalt') : (n('wiz-asphalt') || _wizardState.temperatur?.asphalt || '')
+      },
+      gabel: {
+        negativfederweg_mm: n('gabel-negfed'),
+        durchstreckung_mm: n('gabel-durch'),
+        federvorspannung: n('gabel-federvsp'),
+        druckstufe_klicks: n('gabel-druck'),
+        zugstufe_klicks: n('gabel-zug'),
+        oeltyp: n('gabel-oeltyp'),
+        oelstand_mm: n('gabel-oelstand')
+      },
+      elektronik: {
+        tc_stufe: n('elek-tc-stufe'),
+        tc_modus: g('elek-tc-modus')
+      },
+      sekundaer: {
+        ritzel: n('sek-ritzel'),
+        kettenrad: n('sek-kettenrad'),
+        kettenlaenge: n('sek-kettenlaenge')
+      },
+      federbein: {
+        negativfederweg_mm: n('fb-negfed'),
+        hoehe_mm: n('fb-hoehe'),
+        messpunkt: g('fb-messpunkt'),
+        federvorspannung: n('fb-federvsp'),
+        druckstufe_klicks: n('fb-druck'),
+        zugstufe_klicks: n('fb-zug')
+      },
+      reifen: {
+        vorne: {
+          hersteller: g('reifen-v-hersteller'),
+          modell: g('reifen-v-modell'),
+          compound: g('reifen-v-compound'),
+          druck: n('reifen-v-druck')
+        },
+        hinten: {
+          hersteller: g('reifen-h-hersteller'),
+          modell: g('reifen-h-modell'),
+          compound: g('reifen-h-compound'),
+          druck: n('reifen-h-druck')
+        }
+      },
+      bestzeit: g('setup-bestzeit'),
+      notiz: g('setup-notiz')
+    };
+
+    if (isEdit) {
+      updateSession(_editSession.id, sessionData);
+    } else {
+      addSession(sessionData);
+    }
+
+    _editSession = null;
+    _wizardState = null;
+    App.navigate('zeiten');
+  }
+
+  function _formatDate(dateStr) {
+    if (!dateStr) return '';
+    const [y, m, d] = dateStr.split('-');
+    return `${d}.${m}.${y}`;
+  }
+
+  function _esc(str) {
+    if (!str && str !== 0) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  return { render, startWithWizardState, startWithSession };
+})();
+  </script>
+  <script>
+// ── Screen 5: Bestzeiten & Graph ──
+
+const ScreenZeiten = (() => {
+
+  let _filterVehicle = '';
+  let _filterTrack = '';
+  let _filterBedingung = 'alle';
+  const expandedSessions = new Set();
+  let _deleteConfirmId = null;
+
+  function render() {
+    const el = document.getElementById('screen-zeiten');
+    el.innerHTML = `
+      <div class="screen-header">
+        <span class="screen-title">Zeiten</span>
+      </div>
+      <div class="filter-bar" id="zeiten-filter-bar"></div>
+      <div class="scroll-content" id="zeiten-content"></div>`;
+
+    _renderFilters();
+    _renderContent();
+  }
+
+  function _renderFilters() {
+    const bar = document.getElementById('zeiten-filter-bar');
+    const vehicles = getVehicles();
+    const allSessions = getSessions();
+    const tracks = [...new Set(allSessions.map(s => s.strecke).filter(Boolean))];
+
+    const vehicleLabel = _filterVehicle
+      ? _esc(vehicles.find(v => v.id === _filterVehicle)?.name || 'Motorrad')
+      : 'Alle Motorräder';
+    const trackLabel = _filterTrack ? _esc(_filterTrack) : 'Alle Strecken';
+
+    bar.innerHTML = `
+      <button class="filter-chip ${_filterVehicle ? 'active' : ''}" id="filter-vehicle-btn">
+        ${vehicleLabel}
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-left:5px;flex-shrink:0"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <button class="filter-chip ${_filterTrack ? 'active' : ''}" id="filter-track-btn">
+        ${trackLabel}
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-left:5px;flex-shrink:0"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="filter-divider"></div>
+      <button class="filter-chip ${_filterBedingung === 'alle' ? 'active' : ''}" data-cond="alle">Alle</button>
+      <button class="filter-chip ${_filterBedingung === 'trocken' ? 'active' : ''}" data-cond="trocken">☀ Trocken</button>
+      <button class="filter-chip ${_filterBedingung === 'nass' ? 'active' : ''}" data-cond="nass">🌧 Nass</button>
+    `;
+
+    document.getElementById('filter-vehicle-btn').addEventListener('click', () => {
+      const options = [
+        { label: 'Alle Motorräder', value: '' },
+        ...vehicles.map(v => ({ label: v.name, value: v.id }))
+      ];
+      _openFilterSheet('Motorrad', options, _filterVehicle, val => {
+        _filterVehicle = val;
+        _renderFilters();
+        _renderContent();
+      });
+    });
+
+    document.getElementById('filter-track-btn').addEventListener('click', () => {
+      const options = [
+        { label: 'Alle Strecken', value: '' },
+        ...tracks.map(t => ({ label: t, value: t }))
+      ];
+      _openFilterSheet('Strecke', options, _filterTrack, val => {
+        _filterTrack = val;
+        _renderFilters();
+        _renderContent();
+      });
+    });
+
+    bar.querySelectorAll('[data-cond]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        _filterBedingung = btn.dataset.cond;
+        _renderFilters();
+        _renderContent();
+      });
+    });
+
+    _enableDragScroll(bar);
+  }
+
+  function _enableDragScroll(el) {
+    let startX = 0;
+    let scrollLeft = 0;
+    let dragging = false;
+    let moved = false;
+
+    el.addEventListener('mousedown', e => {
+      dragging = true;
+      moved = false;
+      startX = e.pageX - el.getBoundingClientRect().left;
+      scrollLeft = el.scrollLeft;
+      el.classList.add('dragging');
+    });
+
+    window.addEventListener('mouseup', () => {
+      dragging = false;
+      el.classList.remove('dragging');
+    });
+
+    window.addEventListener('mousemove', e => {
+      if (!dragging) return;
+      const x = e.pageX - el.getBoundingClientRect().left;
+      const walk = x - startX;
+      if (Math.abs(walk) > 4) moved = true;
+      el.scrollLeft = scrollLeft - walk;
+    });
+
+    el.addEventListener('click', e => {
+      if (moved) e.stopPropagation();
+    }, true);
+  }
+
+  function _renderContent() {
+    const el = document.getElementById('zeiten-content');
+    const vehicles = getVehicles();
+    const allSessions = getSessions();
+
+    let filtered = allSessions.filter(s => {
+      if (_filterVehicle && s.vehicleId !== _filterVehicle) return false;
+      if (_filterTrack && s.strecke !== _filterTrack) return false;
+      if (_filterBedingung !== 'alle' && s.bedingung !== _filterBedingung) return false;
+      return true;
+    });
+
+    filtered = filtered.sort((a, b) => {
+      const da = new Date(a.datum + 'T' + (a.uhrzeit || '00:00'));
+      const db = new Date(b.datum + 'T' + (b.uhrzeit || '00:00'));
+      return da - db;
+    });
+
+    const withTime = filtered.filter(s => parseTime(s.bestzeit) !== null);
+    const bestSeconds = withTime.length ? Math.min(...withTime.map(s => parseTime(s.bestzeit))) : null;
+    const bestSession = withTime.find(s => parseTime(s.bestzeit) === bestSeconds);
+
+    const chartData = withTime
+      .slice()
+      .sort((a, b) => {
+        const ad = (a.datum || '') + 'T' + (a.uhrzeit || '');
+        const bd = (b.datum || '') + 'T' + (b.uhrzeit || '');
+        return ad < bd ? -1 : ad > bd ? 1 : 0;
+      })
+      .map(s => ({
+        datum: s.datum,
+        uhrzeit: s.uhrzeit,
+        timeSeconds: parseTime(s.bestzeit),
+        bestzeit: s.bestzeit,
+        bedingung: s.bedingung
+      }));
+
+    const _dateOf = x => new Date((x.datum || '') + 'T' + (x.uhrzeit || ''));
+    const timelineItems = filtered
+      .slice()
+      .sort((a, b) => _dateOf(b) - _dateOf(a));
+
+    el.innerHTML = `
+      ${bestSession ? `
+      <div class="bestzeit-banner">
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">Bestzeit</div>
+          <div class="bestzeit-value">${_esc(bestSession.bestzeit)}</div>
+          <div class="bestzeit-meta">
+            ${_formatDate(bestSession.datum)} · ${_esc(bestSession.strecke)}
+            ${bestSession.reifen?.vorne?.hersteller ? '· ' + _esc(bestSession.reifen.vorne.hersteller) : ''}
+          </div>
+        </div>
+        <div><span class="badge badge-${bestSession.bedingung}">${bestSession.bedingung}</span></div>
+      </div>` : ''}
+
+      ${chartData.length >= 2 && _filterVehicle && _filterTrack ? `
+      <div class="chart-container">
+        <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px">
+          Zeitverlauf — älteste links, neueste rechts
+        </div>
+        <canvas id="zeiten-chart" height="160"></canvas>
+      </div>` : ''}
+
+      ${timelineItems.length === 0 ? `
+      <div class="empty-state">
+        <svg class="empty-state-icon" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+          <circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/>
+        </svg>
+        <p class="empty-state-title">Noch keine Sessions</p>
+        <p class="empty-state-text">Tippe auf + um deine erste Trackday-Session zu erfassen.</p>
+      </div>` : `
+      <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px">
+        ${filtered.length} Session${filtered.length !== 1 ? 's' : ''}
+      </div>
+      ${timelineItems.map(s => _buildHistoryEntry(s, bestSeconds)).join('')}
+      `}
+      <div style="height:8px"></div>`;
+
+    el.querySelectorAll('[data-expand-session]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.expandSession;
+        expandedSessions.has(id) ? expandedSessions.delete(id) : expandedSessions.add(id);
+        _deleteConfirmId = null;
+        _renderContent();
+      });
+    });
+
+    el.querySelectorAll('[data-edit-session]').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const session = getSessions().find(s => s.id === btn.dataset.editSession);
+        if (!session) return;
+        ScreenSetup.startWithSession(session);
+        ScreenSetup.render();
+        App.navigate('setup');
+      });
+    });
+
+    el.querySelectorAll('[data-delete-session]').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        _deleteConfirmId = _deleteConfirmId === btn.dataset.deleteSession ? null : btn.dataset.deleteSession;
+        _renderContent();
+      });
+    });
+
+    el.querySelectorAll('[data-confirm-delete-session]').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        deleteSession(btn.dataset.confirmDeleteSession);
+        expandedSessions.delete(btn.dataset.confirmDeleteSession);
+        _deleteConfirmId = null;
+        _renderContent();
+      });
+    });
+
+    el.querySelectorAll('[data-cancel-delete-session]').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        _deleteConfirmId = null;
+        _renderContent();
+      });
+    });
+
+    const canvas = document.getElementById('zeiten-chart');
+    if (canvas && chartData.length >= 2) {
+      _drawChart(canvas, chartData);
+    }
+  }
+
+  function _openFilterSheet(title, options, current, onSelect) {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+      <div class="modal-sheet">
+        <div class="modal-handle"></div>
+        <div class="modal-title">${title} wählen</div>
+        <div id="filter-sheet-options">
+          ${options.map(opt => `
+            <div class="filter-sheet-option ${opt.value === current ? 'active' : ''}" data-value="${_esc(opt.value)}">
+              <span>${_esc(opt.label)}</span>
+              ${opt.value === current ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>` : ''}
+            </div>`).join('')}
+        </div>
+        <div style="height:8px"></div>
+      </div>`;
+
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+
+    overlay.querySelectorAll('.filter-sheet-option').forEach(opt => {
+      opt.addEventListener('click', () => {
+        onSelect(opt.dataset.value);
+        overlay.remove();
+      });
+    });
+  }
+
+  function _buildHistoryEntry(s, bestSeconds) {
+    const secs = parseTime(s.bestzeit);
+    const delta = (secs !== null && bestSeconds !== null) ? secs - bestSeconds : null;
+    const isBest = delta === 0;
+    const isExpanded = expandedSessions.has(s.id);
+    const isDeleteConfirm = _deleteConfirmId === s.id;
+
+    return `
+      <div class="history-entry">
+        <div class="history-entry-header" data-expand-session="${s.id}">
+          <div class="history-entry-time">${s.bestzeit || '—'}</div>
+          <div class="history-entry-info">
+            <div class="history-entry-track">${_esc(s.strecke)}</div>
+            <div class="history-entry-date">
+              ${_formatDate(s.datum)}${s.uhrzeit ? ' · ' + s.uhrzeit : ''}
+              · <span class="badge badge-${s.bedingung}" style="font-size:10px;padding:1px 6px">${s.bedingung}</span>
+            </div>
+          </div>
+          <div class="history-entry-delta ${isBest ? 'best' : ''}">
+            ${isBest ? '★ Best' : delta !== null ? '+' + delta.toFixed(3) + 's' : ''}
+          </div>
+        </div>
+        ${isExpanded ? `
+        <div class="history-entry-body">
+          ${_buildSessionDetail(s)}
+          <div class="divider"></div>
+          ${isDeleteConfirm ? `
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+            <span style="font-size:13px;color:#ff4444">Session wirklich löschen?</span>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-ghost" data-cancel-delete-session="${s.id}" style="font-size:12px;padding:6px 10px;min-height:34px">Abbrechen</button>
+              <button class="btn btn-danger" data-confirm-delete-session="${s.id}" style="font-size:12px;padding:6px 10px;min-height:34px">Löschen</button>
+            </div>
+          </div>` : `
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-ghost" data-edit-session="${s.id}" style="font-size:12px;padding:6px 12px;min-height:34px;flex:1">
+              Bearbeiten
+            </button>
+            <button class="btn btn-ghost" data-delete-session="${s.id}" style="font-size:12px;padding:6px 12px;min-height:34px;color:var(--text-muted)">
+              Löschen…
+            </button>
+          </div>`}
+        </div>` : ''}
+      </div>`;
+  }
+
+  function _buildSessionDetail(s) {
+    const v = getVehicle(s.vehicleId);
+    const rv = s.reifen?.vorne;
+    const rh = s.reifen?.hinten;
+    const reifenVorne = [rv?.hersteller, rv?.modell, rv?.compound].filter(Boolean).join(' ');
+    const reifenHinten = [rh?.hersteller, rh?.modell, rh?.compound].filter(Boolean).join(' ');
+    const rows = [
+      ['Motorrad', v?.name],
+      ['Lufttemperatur', s.temperatur?.luft !== '' ? s.temperatur?.luft + ' °C' : null],
+      ['Asphalttemperatur', s.temperatur?.asphalt !== '' ? s.temperatur?.asphalt + ' °C' : null],
+      ['Reifen Vorne', reifenVorne || null],
+      ['Druck Vorne', rv?.druck !== '' && rv?.druck !== undefined ? rv.druck + ' bar' : null],
+      ['Reifen Hinten', reifenHinten || null],
+      ['Druck Hinten', rh?.druck !== '' && rh?.druck !== undefined ? rh.druck + ' bar' : null],
+      ['Ritzel / Kettenrad', (s.sekundaer?.ritzel && s.sekundaer?.kettenrad) ? `${s.sekundaer.ritzel} / ${s.sekundaer.kettenrad} = ${(s.sekundaer.kettenrad / s.sekundaer.ritzel).toFixed(3)}` : null],
+      ['Kettenlänge', s.sekundaer?.kettenlaenge ? s.sekundaer.kettenlaenge + ' Glieder' : null],
+      ['Gabel Vorspannung', s.gabel?.federvorspannung !== '' && s.gabel?.federvorspannung !== undefined ? s.gabel.federvorspannung + ' Umdr.' : null],
+      ['Gabel Druckstufe', s.gabel?.druckstufe_klicks !== '' ? s.gabel?.druckstufe_klicks + ' Klicks' : null],
+      ['Gabel Zugstufe', s.gabel?.zugstufe_klicks !== '' ? s.gabel?.zugstufe_klicks + ' Klicks' : null],
+      ['Gabel Öltyp', s.gabel?.oeltyp !== '' && s.gabel?.oeltyp !== undefined ? String(s.gabel.oeltyp) : null],
+      ['Gabel Öllevel', s.gabel?.oelstand_mm !== '' && s.gabel?.oelstand_mm !== undefined ? s.gabel.oelstand_mm + ' mm' : null],
+      ['Federbein Vorspannung', s.federbein?.federvorspannung !== '' && s.federbein?.federvorspannung !== undefined ? s.federbein.federvorspannung + ' Umdr.' : null],
+      ['Federbein Druckstufe', s.federbein?.druckstufe_klicks !== '' ? s.federbein?.druckstufe_klicks + ' Klicks' : null],
+      ['Federbein Zugstufe', s.federbein?.zugstufe_klicks !== '' ? s.federbein?.zugstufe_klicks + ' Klicks' : null],
+      ['Federbein Höhe', s.federbein?.hoehe_mm ? s.federbein.hoehe_mm + ' mm' + (s.federbein?.messpunkt ? ' (' + s.federbein.messpunkt + ')' : '') : null],
+      ['TC Stufe', s.elektronik?.tc_stufe !== '' && s.elektronik?.tc_stufe !== undefined ? String(s.elektronik.tc_stufe) : null],
+      ['TC Modus', s.elektronik?.tc_modus || null],
+    ].filter(([, v]) => v);
+
+    return `
+      <div class="kv-grid" style="margin-bottom:${s.notiz ? '12px' : '0'}">
+        ${rows.map(([k, val]) => `
+          <div class="kv-item">
+            <span class="kv-key">${k}</span>
+            <span class="kv-value">${_esc(String(val))}</span>
+          </div>`).join('')}
+      </div>
+      ${s.notiz ? `<div style="font-size:13px;color:var(--text-muted);line-height:1.6;padding-top:8px;border-top:1px solid var(--border)">
+        ${_esc(s.notiz)}
+      </div>` : ''}`;
+  }
+
+  function _drawChart(canvas, data) {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    const W = rect.width || canvas.parentElement.clientWidth - 32;
+    const H = 160;
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    canvas.style.height = H + 'px';
+
+    const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+
+    const pad = { top: 16, right: 16, bottom: 36, left: 52 };
+    const cW = W - pad.left - pad.right;
+    const cH = H - pad.top - pad.bottom;
+
+    const times = data.map(d => d.timeSeconds);
+    const minT = Math.min(...times);
+    const maxT = Math.max(...times);
+    const rangeT = maxT - minT || 1;
+
+    const toX = i => pad.left + (i / (data.length - 1)) * cW;
+    const toY = t => pad.top + ((maxT - t) / rangeT) * cH;
+
+    ctx.strokeStyle = '#2a2e3d';
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= 3; i++) {
+      const y = pad.top + (i / 3) * cH;
+      ctx.beginPath();
+      ctx.moveTo(pad.left, y);
+      ctx.lineTo(W - pad.right, y);
+      ctx.stroke();
+
+      const t = maxT - (i / 3) * rangeT;
+      ctx.fillStyle = '#9aa0bb';
+      ctx.font = `10px 'Barlow', sans-serif`;
+      ctx.textAlign = 'right';
+      ctx.fillText(formatTime(t), pad.left - 6, y + 4);
+    }
+
+    ctx.fillStyle = '#9aa0bb';
+    ctx.font = `10px 'Barlow', sans-serif`;
+    ctx.textAlign = 'center';
+    const step = Math.max(1, Math.floor(data.length / 4));
+    data.forEach((d, i) => {
+      if (i % step === 0 || i === data.length - 1) {
+        ctx.fillText(_shortDate(d.datum), toX(i), H - 6);
+      }
+    });
+
+    ctx.strokeStyle = '#d4f53c';
+    ctx.lineWidth = 2;
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    data.forEach((d, i) => {
+      const x = toX(i);
+      const y = toY(d.timeSeconds);
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+
+    ctx.fillStyle = 'rgba(212,245,60,0.06)';
+    ctx.beginPath();
+    data.forEach((d, i) => {
+      const x = toX(i);
+      const y = toY(d.timeSeconds);
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.lineTo(toX(data.length - 1), H - pad.bottom);
+    ctx.lineTo(toX(0), H - pad.bottom);
+    ctx.closePath();
+    ctx.fill();
+
+    data.forEach((d, i) => {
+      const x = toX(i);
+      const y = toY(d.timeSeconds);
+      const isBest = d.timeSeconds === minT;
+      ctx.fillStyle = isBest ? '#d4f53c' : '#181b23';
+      ctx.strokeStyle = '#d4f53c';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(x, y, isBest ? 6 : 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    });
+  }
+
+  function _shortDate(dateStr) {
+    if (!dateStr) return '';
+    const [, m, d] = dateStr.split('-');
+    return `${d}.${m}.`;
+  }
+
+  function _formatDate(dateStr) {
+    if (!dateStr) return '';
+    const [y, m, d] = dateStr.split('-');
+    return `${d}.${m}.${y}`;
+  }
+
+  function _esc(str) {
+    if (!str && str !== 0) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  return { render };
+})();
+  </script>
+  <script>
+// ── Export / Import Screen & Logic ──
+
+const ScreenEinstellungen = (() => {
+
+  function render() {
+    const el = document.getElementById('screen-einstellungen');
+    const vehicles = getVehicles();
+    const sessions = getSessions();
+
+    el.innerHTML = `
+      <div class="screen-header">
+        <span class="screen-title">Einstellungen</span>
+      </div>
+      <div class="scroll-content">
+
+        <div class="section-title" style="padding-top:4px">Daten</div>
+
+        <div class="settings-item" id="btn-export">
+          <div class="settings-item-label">
+            <span class="settings-item-title">Export</span>
+            <span class="settings-item-desc">
+              ${vehicles.length} Motorrad${vehicles.length !== 1 ? 'räder' : ''} · ${sessions.length} Session${sessions.length !== 1 ? 's' : ''} exportieren
+            </span>
+          </div>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.8">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+        </div>
+
+        <div class="settings-item" id="btn-import">
+          <div class="settings-item-label">
+            <span class="settings-item-title">Import</span>
+            <span class="settings-item-desc">JSON-Backup importieren</span>
+          </div>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.8">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+        </div>
+
+        <input type="file" id="import-file-input" accept=".json" style="display:none">
+
+        <div class="section-title">Info</div>
+
+        <div class="settings-item" style="cursor:default">
+          <div class="settings-item-label">
+            <span class="settings-item-title">Trackday Manager</span>
+            <span class="settings-item-desc">Version 1.0 · Daten lokal gespeichert</span>
+          </div>
+        </div>
+
+        <div class="settings-item" style="cursor:default">
+          <div class="settings-item-label">
+            <span class="settings-item-title">Datenspeicherung</span>
+            <span class="settings-item-desc">Alle Daten bleiben ausschließlich auf diesem Gerät. Kein Server, keine Cloud.</span>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+        <div id="import-error" style="display:none;color:#ff4444;font-size:13px;padding:8px 0;line-height:1.5"></div>
+        <div id="import-success" style="display:none;color:var(--accent);font-size:13px;padding:8px 0;line-height:1.5"></div>
+
+        <div class="app-version">© Trackday Manager V1</div>
+      </div>`;
+
+    document.getElementById('btn-export').addEventListener('click', _showExportModal);
+    document.getElementById('btn-import').addEventListener('click', () => {
+      document.getElementById('import-file-input').click();
+    });
+    document.getElementById('import-file-input').addEventListener('change', _onFileSelected);
+  }
+
+  function _showExportModal() {
+    const defaultName = 'TrackManager';
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+      <div class="modal-sheet">
+        <div class="modal-handle"></div>
+        <div class="modal-title">Export</div>
+        <div class="field-group">
+          <label class="field-label">Dateiname</label>
+          <input class="field-input" id="export-filename" value="${defaultName}" placeholder="TrackManager">
+          <div style="font-size:11px;color:var(--text-muted);margin-top:4px">.json wird automatisch angehängt</div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button class="btn btn-ghost" id="export-cancel" style="flex:1">Abbrechen</button>
+          <button class="btn btn-primary" id="export-confirm" style="flex:1">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="flex-shrink:0">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Exportieren
+          </button>
+        </div>
+      </div>`;
+
+    document.body.appendChild(overlay);
+    overlay.querySelector('#export-cancel').addEventListener('click', () => overlay.remove());
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+
+    overlay.querySelector('#export-confirm').addEventListener('click', () => {
+      const raw = document.getElementById('export-filename').value.trim();
+      const name = raw || defaultName;
+      overlay.remove();
+      _doExport(name);
+    });
+
+    setTimeout(() => {
+      const input = document.getElementById('export-filename');
+      if (input) { input.focus(); input.select(); }
+    }, 80);
+  }
+
+  async function _doExport(filename) {
+    const payload = getExportPayload();
+    const json = JSON.stringify(payload, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const fullName = filename + '.json';
+
+    if (window.showSaveFilePicker) {
+      try {
+        const handle = await window.showSaveFilePicker({
+          suggestedName: fullName,
+          types: [{ description: 'JSON-Datei', accept: { 'application/json': ['.json'] } }]
+        });
+        const writable = await handle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+        _showSuccess(`"${fullName}" wurde gespeichert.`);
+        return;
+      } catch (e) {
+        if (e.name === 'AbortError') return;
+      }
+    }
+
+    if (navigator.share && navigator.canShare) {
+      const file = new File([blob], fullName, { type: 'application/json' });
+      if (navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file], title: filename });
+          return;
+        } catch (e) {
+          if (e.name === 'AbortError') return;
+        }
+      }
+    }
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fullName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    _showSuccess(`"${fullName}" wird heruntergeladen.`);
+  }
+
+  function _onFileSelected(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    e.target.value = '';
+
+    importFromFile(file).then(data => {
+      _showImportConflictModal(data);
+    }).catch(err => {
+      _showError(err.message);
+    });
+  }
+
+  function _showImportConflictModal(data) {
+    const vCount = (data.vehicles || []).length;
+    const sCount = (data.sessions || []).length;
+    const existingV = getVehicles().length;
+    const existingS = getSessions().length;
+
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+      <div class="modal-sheet">
+        <div class="modal-handle"></div>
+        <div class="modal-title">Import</div>
+        <p style="font-size:14px;color:var(--text-muted);margin-bottom:20px;line-height:1.6">
+          Die Datei enthält <strong style="color:var(--text)">${vCount} Motorrad${vCount !== 1 ? 'räder' : ''}</strong> und
+          <strong style="color:var(--text)">${sCount} Session${sCount !== 1 ? 's' : ''}</strong>.
+        </p>
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:20px;line-height:1.6">
+          Aktuell gespeichert: ${existingV} Motorräder, ${existingS} Sessions.
+        </p>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
+          <button class="btn btn-secondary btn-full" id="import-merge">
+            Zusammenführen
+            <span style="font-size:11px;font-weight:400;opacity:0.7;margin-left:6px">Nur neue Einträge hinzufügen</span>
+          </button>
+          <button class="btn btn-danger btn-full" id="import-replace">
+            Ersetzen
+            <span style="font-size:11px;font-weight:400;opacity:0.7;margin-left:6px">Alle vorhandenen Daten überschreiben</span>
+          </button>
+        </div>
+        <button class="btn btn-ghost btn-full" id="import-cancel-modal">Abbrechen</button>
+      </div>`;
+
+    document.body.appendChild(overlay);
+
+    overlay.querySelector('#import-cancel-modal').addEventListener('click', () => overlay.remove());
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+
+    overlay.querySelector('#import-merge').addEventListener('click', () => {
+      applyImport(data, 'merge');
+      overlay.remove();
+      _showSuccess(`Import abgeschlossen: ${vCount} Motorräder, ${sCount} Sessions zusammengeführt.`);
+      render();
+    });
+
+    overlay.querySelector('#import-replace').addEventListener('click', () => {
+      applyImport(data, 'replace');
+      overlay.remove();
+      _showSuccess(`Import abgeschlossen: ${vCount} Motorräder, ${sCount} Sessions geladen.`);
+      render();
+    });
+  }
+
+  function _showError(msg) {
+    const errEl = document.getElementById('import-error');
+    const okEl = document.getElementById('import-success');
+    if (!errEl) return;
+    errEl.textContent = '⚠ ' + msg;
+    errEl.style.display = 'block';
+    if (okEl) okEl.style.display = 'none';
+    setTimeout(() => { if (errEl) errEl.style.display = 'none'; }, 6000);
+  }
+
+  function _showSuccess(msg) {
+    const okEl = document.getElementById('import-success');
+    const errEl = document.getElementById('import-error');
+    if (!okEl) return;
+    okEl.textContent = '✓ ' + msg;
+    okEl.style.display = 'block';
+    if (errEl) errEl.style.display = 'none';
+    setTimeout(() => { if (okEl) okEl.style.display = 'none'; }, 5000);
+  }
+
+  return { render };
+})();
+  </script>
+  <script>
+// ── Router & App Init ──
+
+const App = (() => {
+
+  let _current = null;
+
+  function navigate(screen) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-btn[data-screen]').forEach(b => b.classList.remove('active'));
+
+    const el = document.getElementById(`screen-${screen}`);
+    if (!el) return;
+    el.classList.add('active');
+    _current = screen;
+
+    const navBtn = document.querySelector(`.nav-btn[data-screen="${screen}"]`);
+    if (navBtn) navBtn.classList.add('active');
+
+    _initScreen(screen);
+  }
+
+  function _initScreen(screen) {
+    switch (screen) {
+      case 'fahrzeuge':      ScreenFahrzeuge.render(); break;
+      case 'wizard':         ScreenWizard.render(); break;
+      case 'setup':          ScreenSetup.render(); break;
+      case 'zeiten':         ScreenZeiten.render(); break;
+      case 'einstellungen':  ScreenEinstellungen.render(); break;
+    }
+  }
+
+  function _initNav() {
+    document.querySelectorAll('.nav-btn[data-screen]').forEach(btn => {
+      btn.addEventListener('click', () => navigate(btn.dataset.screen));
+    });
+
+    document.getElementById('btn-new-session').addEventListener('click', () => {
+      if (getVehicles().length === 0) {
+        navigate('fahrzeuge');
+        return;
+      }
+      ScreenWizard.start();
+    });
+  }
+
+  function init() {
+    _initNav();
+    navigate('fahrzeuge');
+  }
+
+  return { navigate, init };
+})();
+
+// Boot
+document.addEventListener('DOMContentLoaded', () => App.init());
+  </script>
 </body>
 </html>

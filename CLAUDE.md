@@ -11,16 +11,19 @@ Sprache: Deutsch. Design: Dark Theme.
 
 ## Projektstruktur
 ```
-TrackdayManager.html      ← App-Shell, lädt alle Scripts
-css/app.css               ← Gesamtes Design-System (dark theme, cards, modals, filter)
-js/data.js                ← Datenschicht: localStorage, CRUD, Migration, Export/Import
-js/screen-fahrzeuge.js    ← Motorrad-Verwaltung (CRUD mit Inline-Edit)
-js/screen-wizard.js       ← 3-Step Wizard: Motorrad → Bedingungen → Strecke
-js/screen-setup.js        ← Setup-Erfassung (Fahrwerk, Reifen, Elektronik) + Edit-Modus
-js/screen-zeiten.js       ← Zeiten-Übersicht, Chart, Filter, Session löschen/bearbeiten
-js/export-import.js       ← JSON Export/Import mit Merge/Replace
-js/app.js                 ← Router (App.navigate), Bottom-Nav
+TrackdayManager.html      ← Einzige Datei — enthält HTML, CSS und alle Scripts inline
+CLAUDE.md                 ← Projektdoku für Claude
 ```
+
+**Single-File Architektur:** Alles ist in `TrackdayManager.html` inline eingebettet.
+Keine externen CSS- oder JS-Dateien mehr. Reihenfolge der `<script>`-Blöcke im HTML:
+1. `data.js`             — Datenschicht: localStorage, CRUD, Migration, Export/Import
+2. `screen-fahrzeuge.js` — Motorrad-Verwaltung (CRUD mit Inline-Edit)
+3. `screen-wizard.js`    — 3-Step Wizard: Motorrad → Bedingungen → Strecke
+4. `screen-setup.js`     — Setup-Erfassung (Fahrwerk, Reifen, Elektronik) + Edit-Modus
+5. `screen-zeiten.js`    — Zeiten-Übersicht, Chart, Filter, Session löschen/bearbeiten
+6. `export-import.js`    — JSON Export/Import mit Merge/Replace + Dateinamen-Modal
+7. `app.js`              — Router (App.navigate), Bottom-Nav
 
 ## Datenmodell (DB_VERSION = 2)
 ```
@@ -36,6 +39,14 @@ sessions[]  → id, vehicleId, datum, uhrzeit, strecke, streckeKm, bedingung,
 events[]    → nicht mehr aktiv genutzt (Feature entfernt, Daten bleiben in localStorage)
 ```
 
+## Export (plattformübergreifend)
+`getExportPayload()` liefert das JSON-Objekt. Die Speicherlogik in `ScreenEinstellungen._doExport()`:
+1. **`showSaveFilePicker`** — Desktop Chrome/Edge: echter Speichern-Dialog mit Ordnerauswahl
+2. **`navigator.share` mit File** — iOS Safari: Share-Sheet → „In Dateien sichern"
+3. **Fallback Download-Link** — alle anderen Browser
+
+Vor dem Export erscheint ein Modal zur Eingabe des Dateinamens (Default: `TrackManager`).
+
 ## Wichtige Designentscheidungen
 - Alle Felder optional (leerer String = nicht gesetzt)
 - Setup-Screen: Felder werden aus letzter Session pro Motorrad vorausgefüllt
@@ -47,11 +58,12 @@ events[]    → nicht mehr aktiv genutzt (Feature entfernt, Daten bleiben in loc
 - `toY`: langsamere Zeiten oben, schnellere unten (Linie geht runter = Verbesserung)
 
 ## Bekannte Eigenheiten
-- `_attachCardEvents()` in screen-fahrzeuge.js nur in `render()` aufrufen, NICHT in `_renderList()` (sonst doppelte Listener → Toggle funktioniert nicht)
+- `_attachCardEvents()` nur in `render()` aufrufen, NICHT in `_renderList()` (sonst doppelte Listener → Toggle funktioniert nicht)
 - Chart-Sort: String-Vergleich `YYYY-MM-DDTHH:MM` statt `new Date()` (robuster)
 - `updateSession` macht shallow merge — verschachtelte Objekte (gabel, federbein etc.) werden komplett übergeben
+- Google Fonts wird extern geladen — App funktioniert offline, aber mit Fallback-Schrift
 
-## Strecken (STRECKEN in data.js)
+## Strecken (STRECKEN in data.js Block)
 Assen IDM Kurs, Oschersleben, Mettet, Rijeka, Most, Brünn, Lausitzring, Spa, Zolder, Wuppertal, Hagen, RacelandKart, Vledderveen
 
 ## Label-Konventionen
