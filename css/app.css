@@ -600,14 +600,19 @@ textarea.field-input {
 .filter-bar {
   display: flex;
   gap: 8px;
-  margin-bottom: 16px;
+  padding: 0 16px 10px;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
-  padding-bottom: 2px;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border);
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .filter-bar::-webkit-scrollbar { display: none; }
+.filter-bar.dragging { cursor: grabbing; }
 
 .filter-chip {
   flex-shrink: 0;
@@ -631,12 +636,40 @@ textarea.field-input {
   background: rgba(212, 245, 60, 0.08);
 }
 
-select.filter-chip {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%239aa0bb' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 10px center;
-  padding-right: 28px;
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
 }
+
+.filter-divider {
+  width: 1px;
+  height: 20px;
+  background: var(--border);
+  flex-shrink: 0;
+  align-self: center;
+}
+
+/* ── Filter Bottom Sheet Options ── */
+.filter-sheet-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 4px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  font-size: 16px;
+  min-height: 52px;
+  transition: color 0.15s;
+}
+
+.filter-sheet-option:last-child { border-bottom: none; }
+
+.filter-sheet-option.active {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.filter-sheet-option:active { opacity: 0.7; }
 
 /* ── History table ── */
 .history-entry {
@@ -779,6 +812,60 @@ select.filter-chip {
   display: flex;
   gap: 8px;
   flex-shrink: 0;
+}
+
+/* ── Event Marker ── */
+.event-marker {
+  margin-bottom: 8px;
+}
+
+.event-marker-line {
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--secondary), transparent);
+  margin-bottom: 6px;
+}
+
+.event-marker-body {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: rgba(255, 101, 53, 0.07);
+  border: 1px solid rgba(255, 101, 53, 0.25);
+  border-radius: var(--radius-card);
+}
+
+.event-marker-icon {
+  color: var(--secondary);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.event-marker-content {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.event-marker-typ {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--secondary);
+}
+
+.event-marker-date {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.event-marker-notiz {
+  width: 100%;
+  font-size: 12px;
+  color: var(--text-muted);
+  font-style: italic;
 }
 
 /* ── Settings ── */

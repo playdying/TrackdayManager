@@ -19,6 +19,7 @@ const ScreenFahrzeuge = (() => {
     `;
     _renderList();
     document.getElementById('btn-add-vehicle').addEventListener('click', _openAddModal);
+    _attachCardEvents();
   }
 
   function _renderList() {
@@ -39,7 +40,6 @@ const ScreenFahrzeuge = (() => {
     }
 
     list.innerHTML = vehicles.map(v => _buildCard(v)).join('');
-    _attachCardEvents();
   }
 
   function _buildCard(v) {

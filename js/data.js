@@ -1,12 +1,13 @@
 // ── Trackday Manager — Data Layer ──
 
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STORAGE_KEY = 'trackday_v1';
 
 const DB = {
   version: DB_VERSION,
   vehicles: [],
-  sessions: []
+  sessions: [],
+  events: []
 };
 
 // ── Persistence ──
@@ -19,6 +20,7 @@ function _loadData() {
     if (parsed.version === DB_VERSION) {
       DB.vehicles = parsed.vehicles || [];
       DB.sessions = parsed.sessions || [];
+      DB.events = parsed.events || [];
     } else {
       _migrateStorage(parsed);
     }
@@ -31,15 +33,27 @@ function _saveData() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify({
     version: DB_VERSION,
     vehicles: DB.vehicles,
-    sessions: DB.sessions
+    sessions: DB.sessions,
+    events: DB.events
   }));
 }
 
 function _migrateStorage(old) {
-  // V1 → future: add migration steps here
   DB.vehicles = old.vehicles || [];
-  DB.sessions = old.sessions || [];
+  DB.sessions = (old.sessions || []).map(s => _migrateSession(s, old.version || 1));
+  DB.events = old.events || [];
   _saveData();
+}
+
+function _migrateSession(s, fromVersion) {
+  if (fromVersion < 2) {
+    const r = s.reifen || {};
+    s.reifen = {
+      vorne: { hersteller: r.hersteller || '', modell: r.modell || '', compound: r.compound || '', druck: r.druck_vorne ?? '' },
+      hinten: { hersteller: r.hersteller || '', modell: r.modell || '', compound: r.compound || '', druck: r.druck_hinten ?? '' }
+    };
+  }
+  return s;
 }
 
 function generateId() {
@@ -139,22 +153,42 @@ function addSession(data) {
       asphalt: data.temperatur?.asphalt ?? ''
     },
     reifen: {
-      hersteller: data.reifen?.hersteller || '',
-      modell: data.reifen?.modell || '',
-      compound: data.reifen?.compound || '',
-      druck_vorne: data.reifen?.druck_vorne ?? '',
-      druck_hinten: data.reifen?.druck_hinten ?? ''
+      vorne: {
+        hersteller: data.reifen?.vorne?.hersteller || '',
+        modell: data.reifen?.vorne?.modell || '',
+        compound: data.reifen?.vorne?.compound || '',
+        druck: data.reifen?.vorne?.druck ?? ''
+      },
+      hinten: {
+        hersteller: data.reifen?.hinten?.hersteller || '',
+        modell: data.reifen?.hinten?.modell || '',
+        compound: data.reifen?.hinten?.compound || '',
+        druck: data.reifen?.hinten?.druck ?? ''
+      }
+    },
+    elektronik: {
+      tc_stufe: data.elektronik?.tc_stufe ?? '',
+      tc_modus: data.elektronik?.tc_modus ?? ''
+    },
+    sekundaer: {
+      ritzel: data.sekundaer?.ritzel ?? '',
+      kettenrad: data.sekundaer?.kettenrad ?? '',
+      kettenlaenge: data.sekundaer?.kettenlaenge ?? ''
     },
     gabel: {
       negativfederweg_mm: data.gabel?.negativfederweg_mm ?? '',
       durchstreckung_mm: data.gabel?.durchstreckung_mm ?? '',
+      federvorspannung: data.gabel?.federvorspannung ?? '',
       druckstufe_klicks: data.gabel?.druckstufe_klicks ?? '',
-      zugstufe_klicks: data.gabel?.zugstufe_klicks ?? ''
+      zugstufe_klicks: data.gabel?.zugstufe_klicks ?? '',
+      oeltyp: data.gabel?.oeltyp ?? '',
+      oelstand_mm: data.gabel?.oelstand_mm ?? ''
     },
     federbein: {
       negativfederweg_mm: data.federbein?.negativfederweg_mm ?? '',
       hoehe_mm: data.federbein?.hoehe_mm ?? '',
-      messpunkt: data.federbein?.messpunkt || 'Kettenspanner',
+      messpunkt: data.federbein?.messpunkt || '',
+      federvorspannung: data.federbein?.federvorspannung ?? '',
       druckstufe_klicks: data.federbein?.druckstufe_klicks ?? '',
       zugstufe_klicks: data.federbein?.zugstufe_klicks ?? ''
     },
@@ -165,6 +199,45 @@ function addSession(data) {
   DB.sessions.push(s);
   _saveData();
   return s;
+}
+
+function updateSession(id, data) {
+  const idx = DB.sessions.findIndex(s => s.id === id);
+  if (idx === -1) return null;
+  DB.sessions[idx] = { ...DB.sessions[idx], ...data };
+  _saveData();
+  return DB.sessions[idx];
+}
+
+function deleteSession(id) {
+  DB.sessions = DB.sessions.filter(s => s.id !== id);
+  _saveData();
+}
+
+// ── Events ──
+
+function getEvents(vehicleId) {
+  if (vehicleId) return DB.events.filter(e => e.vehicleId === vehicleId);
+  return DB.events;
+}
+
+function addEvent(data) {
+  const e = {
+    id: generateId(),
+    vehicleId: data.vehicleId || '',
+    datum: data.datum || '',
+    typ: data.typ || 'Sonstiges',
+    notiz: data.notiz || '',
+    createdAt: new Date().toISOString()
+  };
+  DB.events.push(e);
+  _saveData();
+  return e;
+}
+
+function deleteEvent(id) {
+  DB.events = DB.events.filter(e => e.id !== id);
+  _saveData();
 }
 
 function getLastSessionForVehicle(vehicleId) {
@@ -202,7 +275,7 @@ function exportData() {
     version: DB_VERSION,
     exportedAt: new Date().toISOString(),
     app: 'trackday-manager',
-    data: { vehicles: DB.vehicles, sessions: DB.sessions }
+    data: { vehicles: DB.vehicles, sessions: DB.sessions, events: DB.events }
   };
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -244,24 +317,29 @@ function _migrateImport(imported) {
   let vehicles = data.vehicles || [];
   let sessions = data.sessions || [];
 
-  // Future: if (version < 2) { /* migrate fields */ }
-
   if (version > DB_VERSION) {
     throw new Error(`Version ${version} wird von dieser App nicht unterstützt. Bitte App aktualisieren.`);
   }
 
-  return { vehicles, sessions };
+  if (version < 2) {
+    sessions = sessions.map(s => _migrateSession(s, version));
+  }
+
+  return { vehicles, sessions, events: data.events || [] };
 }
 
 function applyImport(data, mode) {
   if (mode === 'replace') {
     DB.vehicles = data.vehicles;
     DB.sessions = data.sessions;
+    DB.events = data.events || [];
   } else {
     const existingVIds = new Set(DB.vehicles.map(v => v.id));
     const existingSIds = new Set(DB.sessions.map(s => s.id));
+    const existingEIds = new Set(DB.events.map(e => e.id));
     data.vehicles.forEach(v => { if (!existingVIds.has(v.id)) DB.vehicles.push(v); });
     data.sessions.forEach(s => { if (!existingSIds.has(s.id)) DB.sessions.push(s); });
+    (data.events || []).forEach(e => { if (!existingEIds.has(e.id)) DB.events.push(e); });
   }
   _saveData();
 }
@@ -271,14 +349,31 @@ _loadData();
 
 // ── Predefined tracks ──
 const STRECKEN = [
-  { name: 'Nürburgring GP', km: '5.148' },
-  { name: 'Hockenheimring', km: '4.574' },
-  { name: 'Lausitzring', km: '4.534' },
-  { name: 'Sachsenring', km: '3.671' },
+  { name: 'Assen IDM Kurs', km: '4.555' },
   { name: 'Oschersleben', km: '3.667' },
+  { name: 'Mettet', km: '3.850' },
+  { name: 'Rijeka', km: '4.168' },
   { name: 'Most', km: '4.212' },
-  { name: 'Spa-Francorchamps', km: '7.004' },
-  { name: 'Mugello', km: '5.245' }
+  { name: 'Brünn', km: '5.403' },
+  { name: 'Lausitzring', km: '4.534' },
+  { name: 'Spa', km: '7.004' },
+  { name: 'Zolder', km: '4.011' },
+  { name: 'Wuppertal', km: '' },
+  { name: 'Hagen', km: '' },
+  { name: 'RacelandKart', km: '' },
+  { name: 'Vledderveen', km: '' }
 ];
 
 const MESSPUNKTE = ['Kettenspanner', 'Schwinge', 'Achse', 'Rahmenheck'];
+
+const EVENT_TYPEN = [
+  'Fahrwerksservice',
+  'Gabelservice',
+  'Federbein-Service',
+  'Motorrevision',
+  'Reifenwechsel',
+  'Kettenservice',
+  'Reparatur / Unfall',
+  'Umbau',
+  'Sonstiges'
+];

@@ -6,19 +6,113 @@ const ScreenZeiten = (() => {
   let _filterTrack = '';
   let _filterBedingung = 'alle';
   const expandedSessions = new Set();
+  let _deleteConfirmId = null;
 
   function render() {
     const el = document.getElementById('screen-zeiten');
-    const vehicles = getVehicles();
-    const allSessions = getSessions();
-
     el.innerHTML = `
       <div class="screen-header">
         <span class="screen-title">Zeiten</span>
       </div>
+      <div class="filter-bar" id="zeiten-filter-bar"></div>
       <div class="scroll-content" id="zeiten-content"></div>`;
 
+    _renderFilters();
     _renderContent();
+  }
+
+  function _renderFilters() {
+    const bar = document.getElementById('zeiten-filter-bar');
+    const vehicles = getVehicles();
+    const allSessions = getSessions();
+    const tracks = [...new Set(allSessions.map(s => s.strecke).filter(Boolean))];
+
+    const vehicleLabel = _filterVehicle
+      ? _esc(vehicles.find(v => v.id === _filterVehicle)?.name || 'Motorrad')
+      : 'Alle Motorräder';
+    const trackLabel = _filterTrack ? _esc(_filterTrack) : 'Alle Strecken';
+
+    bar.innerHTML = `
+      <button class="filter-chip ${_filterVehicle ? 'active' : ''}" id="filter-vehicle-btn">
+        ${vehicleLabel}
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-left:5px;flex-shrink:0"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <button class="filter-chip ${_filterTrack ? 'active' : ''}" id="filter-track-btn">
+        ${trackLabel}
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-left:5px;flex-shrink:0"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="filter-divider"></div>
+      <button class="filter-chip ${_filterBedingung === 'alle' ? 'active' : ''}" data-cond="alle">Alle</button>
+      <button class="filter-chip ${_filterBedingung === 'trocken' ? 'active' : ''}" data-cond="trocken">☀ Trocken</button>
+      <button class="filter-chip ${_filterBedingung === 'nass' ? 'active' : ''}" data-cond="nass">🌧 Nass</button>
+    `;
+
+    document.getElementById('filter-vehicle-btn').addEventListener('click', () => {
+      const options = [
+        { label: 'Alle Motorräder', value: '' },
+        ...vehicles.map(v => ({ label: v.name, value: v.id }))
+      ];
+      _openFilterSheet('Motorrad', options, _filterVehicle, val => {
+        _filterVehicle = val;
+        _renderFilters();
+        _renderContent();
+      });
+    });
+
+    document.getElementById('filter-track-btn').addEventListener('click', () => {
+      const options = [
+        { label: 'Alle Strecken', value: '' },
+        ...tracks.map(t => ({ label: t, value: t }))
+      ];
+      _openFilterSheet('Strecke', options, _filterTrack, val => {
+        _filterTrack = val;
+        _renderFilters();
+        _renderContent();
+      });
+    });
+
+    bar.querySelectorAll('[data-cond]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        _filterBedingung = btn.dataset.cond;
+        _renderFilters();
+        _renderContent();
+      });
+    });
+
+    _enableDragScroll(bar);
+  }
+
+  function _enableDragScroll(el) {
+    let startX = 0;
+    let scrollLeft = 0;
+    let dragging = false;
+    let moved = false;
+
+    el.addEventListener('mousedown', e => {
+      dragging = true;
+      moved = false;
+      startX = e.pageX - el.getBoundingClientRect().left;
+      scrollLeft = el.scrollLeft;
+      el.classList.add('dragging');
+    });
+
+    window.addEventListener('mouseup', () => {
+      dragging = false;
+      el.classList.remove('dragging');
+    });
+
+    window.addEventListener('mousemove', e => {
+      if (!dragging) return;
+      const x = e.pageX - el.getBoundingClientRect().left;
+      const walk = x - startX;
+      if (Math.abs(walk) > 4) moved = true;
+      el.scrollLeft = scrollLeft - walk;
+    });
+
+    // Prevent click from firing on buttons after a drag
+    el.addEventListener('click', e => {
+      if (moved) e.stopPropagation();
+    }, true);
   }
 
   function _renderContent() {
@@ -47,61 +141,55 @@ const ScreenZeiten = (() => {
     const bestSeconds = withTime.length ? Math.min(...withTime.map(s => parseTime(s.bestzeit))) : null;
     const bestSession = withTime.find(s => parseTime(s.bestzeit) === bestSeconds);
 
-    // Chart data
-    const chartData = withTime.map(s => ({
-      datum: s.datum,
-      timeSeconds: parseTime(s.bestzeit),
-      bestzeit: s.bestzeit,
-      bedingung: s.bedingung,
-      reifen: [s.reifen?.hersteller, s.reifen?.compound].filter(Boolean).join(' ')
-    }));
+    // Chart data — sorted ascending by session date (oldest left, newest right)
+    // String comparison of YYYY-MM-DDTHH:MM is identical to chronological order
+    const chartData = withTime
+      .slice()
+      .sort((a, b) => {
+        const ad = (a.datum || '') + 'T' + (a.uhrzeit || '');
+        const bd = (b.datum || '') + 'T' + (b.uhrzeit || '');
+        return ad < bd ? -1 : ad > bd ? 1 : 0;
+      })
+      .map(s => ({
+        datum: s.datum,
+        uhrzeit: s.uhrzeit,
+        timeSeconds: parseTime(s.bestzeit),
+        bestzeit: s.bestzeit,
+        bedingung: s.bedingung
+      }));
+
+    // Sessions newest first for history list
+    const _dateOf = x => new Date((x.datum || '') + 'T' + (x.uhrzeit || ''));
+    const timelineItems = filtered
+      .slice()
+      .sort((a, b) => _dateOf(b) - _dateOf(a));
 
     el.innerHTML = `
-      <!-- Filters -->
-      <div class="filter-bar">
-        <select class="filter-chip ${_filterVehicle ? 'active' : ''}" id="filter-vehicle">
-          <option value="">Alle Motorräder</option>
-          ${vehicles.map(v => `<option value="${v.id}" ${_filterVehicle === v.id ? 'selected' : ''}>${_esc(v.name)}</option>`).join('')}
-        </select>
-        <select class="filter-chip ${_filterTrack ? 'active' : ''}" id="filter-track">
-          <option value="">Alle Strecken</option>
-          ${tracks.map(t => `<option value="${t}" ${_filterTrack === t ? 'selected' : ''}>${_esc(t)}</option>`).join('')}
-        </select>
-        <button class="filter-chip ${_filterBedingung === 'alle' ? 'active' : ''}" data-cond="alle">Alle</button>
-        <button class="filter-chip ${_filterBedingung === 'trocken' ? 'active' : ''}" data-cond="trocken">Trocken</button>
-        <button class="filter-chip ${_filterBedingung === 'nass' ? 'active' : ''}" data-cond="nass">Nass</button>
-      </div>
-
       <!-- Bestzeit Banner -->
       ${bestSession ? `
       <div class="bestzeit-banner">
         <div>
-          <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">
-            Bestzeit
-          </div>
+          <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">Bestzeit</div>
           <div class="bestzeit-value">${_esc(bestSession.bestzeit)}</div>
           <div class="bestzeit-meta">
             ${_formatDate(bestSession.datum)} · ${_esc(bestSession.strecke)}
-            ${bestSession.reifen?.hersteller ? '· ' + _esc(bestSession.reifen.hersteller) : ''}
-            ${bestSession.reifen?.compound ? _esc(bestSession.reifen.compound) : ''}
+            ${bestSession.reifen?.vorne?.hersteller ? '· ' + _esc(bestSession.reifen.vorne.hersteller) : ''}
           </div>
         </div>
-        <div>
-          <span class="badge badge-${bestSession.bedingung}">${bestSession.bedingung}</span>
-        </div>
+        <div><span class="badge badge-${bestSession.bedingung}">${bestSession.bedingung}</span></div>
       </div>` : ''}
 
       <!-- Chart -->
-      ${chartData.length >= 2 ? `
+      ${chartData.length >= 2 && _filterVehicle && _filterTrack ? `
       <div class="chart-container">
         <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px">
-          Zeitverlauf
+          Zeitverlauf — älteste links, neueste rechts
         </div>
         <canvas id="zeiten-chart" height="160"></canvas>
       </div>` : ''}
 
-      <!-- History -->
-      ${filtered.length === 0 ? `
+      <!-- Timeline -->
+      ${timelineItems.length === 0 ? `
       <div class="empty-state">
         <svg class="empty-state-icon" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
           <circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/>
@@ -112,31 +200,55 @@ const ScreenZeiten = (() => {
       <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px">
         ${filtered.length} Session${filtered.length !== 1 ? 's' : ''}
       </div>
-      ${[...filtered].reverse().map(s => _buildHistoryEntry(s, bestSeconds)).join('')}
+      ${timelineItems.map(s => _buildHistoryEntry(s, bestSeconds)).join('')}
       `}
       <div style="height:8px"></div>`;
 
-    // Attach filter events
-    document.getElementById('filter-vehicle')?.addEventListener('change', e => {
-      _filterVehicle = e.target.value;
-      _renderContent();
-    });
-    document.getElementById('filter-track')?.addEventListener('change', e => {
-      _filterTrack = e.target.value;
-      _renderContent();
-    });
-    el.querySelectorAll('[data-cond]').forEach(btn => {
+    // Expand sessions
+    el.querySelectorAll('[data-expand-session]').forEach(btn => {
       btn.addEventListener('click', () => {
-        _filterBedingung = btn.dataset.cond;
+        const id = btn.dataset.expandSession;
+        expandedSessions.has(id) ? expandedSessions.delete(id) : expandedSessions.add(id);
+        _deleteConfirmId = null;
         _renderContent();
       });
     });
 
-    // Expand history entries
-    el.querySelectorAll('[data-expand-session]').forEach(header => {
-      header.addEventListener('click', () => {
-        const id = header.dataset.expandSession;
-        expandedSessions.has(id) ? expandedSessions.delete(id) : expandedSessions.add(id);
+    // Edit session
+    el.querySelectorAll('[data-edit-session]').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const session = getSessions().find(s => s.id === btn.dataset.editSession);
+        if (!session) return;
+        ScreenSetup.startWithSession(session);
+        ScreenSetup.render();
+        App.navigate('setup');
+      });
+    });
+
+    // Delete session — show confirm
+    el.querySelectorAll('[data-delete-session]').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        _deleteConfirmId = _deleteConfirmId === btn.dataset.deleteSession ? null : btn.dataset.deleteSession;
+        _renderContent();
+      });
+    });
+
+    el.querySelectorAll('[data-confirm-delete-session]').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        deleteSession(btn.dataset.confirmDeleteSession);
+        expandedSessions.delete(btn.dataset.confirmDeleteSession);
+        _deleteConfirmId = null;
+        _renderContent();
+      });
+    });
+
+    el.querySelectorAll('[data-cancel-delete-session]').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        _deleteConfirmId = null;
         _renderContent();
       });
     });
@@ -148,11 +260,42 @@ const ScreenZeiten = (() => {
     }
   }
 
+  function _openFilterSheet(title, options, current, onSelect) {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+      <div class="modal-sheet">
+        <div class="modal-handle"></div>
+        <div class="modal-title">${title} wählen</div>
+        <div id="filter-sheet-options">
+          ${options.map(opt => `
+            <div class="filter-sheet-option ${opt.value === current ? 'active' : ''}" data-value="${_esc(opt.value)}">
+              <span>${_esc(opt.label)}</span>
+              ${opt.value === current ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>` : ''}
+            </div>`).join('')}
+        </div>
+        <div style="height:8px"></div>
+      </div>`;
+
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+
+    overlay.querySelectorAll('.filter-sheet-option').forEach(opt => {
+      opt.addEventListener('click', () => {
+        onSelect(opt.dataset.value);
+        overlay.remove();
+      });
+    });
+  }
+
+
+
   function _buildHistoryEntry(s, bestSeconds) {
     const secs = parseTime(s.bestzeit);
     const delta = (secs !== null && bestSeconds !== null) ? secs - bestSeconds : null;
     const isBest = delta === 0;
     const isExpanded = expandedSessions.has(s.id);
+    const isDeleteConfirm = _deleteConfirmId === s.id;
 
     return `
       <div class="history-entry">
@@ -172,24 +315,54 @@ const ScreenZeiten = (() => {
         ${isExpanded ? `
         <div class="history-entry-body">
           ${_buildSessionDetail(s)}
+          <div class="divider"></div>
+          ${isDeleteConfirm ? `
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+            <span style="font-size:13px;color:#ff4444">Session wirklich löschen?</span>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-ghost" data-cancel-delete-session="${s.id}" style="font-size:12px;padding:6px 10px;min-height:34px">Abbrechen</button>
+              <button class="btn btn-danger" data-confirm-delete-session="${s.id}" style="font-size:12px;padding:6px 10px;min-height:34px">Löschen</button>
+            </div>
+          </div>` : `
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-ghost" data-edit-session="${s.id}" style="font-size:12px;padding:6px 12px;min-height:34px;flex:1">
+              Bearbeiten
+            </button>
+            <button class="btn btn-ghost" data-delete-session="${s.id}" style="font-size:12px;padding:6px 12px;min-height:34px;color:var(--text-muted)">
+              Löschen…
+            </button>
+          </div>`}
         </div>` : ''}
       </div>`;
   }
 
   function _buildSessionDetail(s) {
     const v = getVehicle(s.vehicleId);
+    const rv = s.reifen?.vorne;
+    const rh = s.reifen?.hinten;
+    const reifenVorne = [rv?.hersteller, rv?.modell, rv?.compound].filter(Boolean).join(' ');
+    const reifenHinten = [rh?.hersteller, rh?.modell, rh?.compound].filter(Boolean).join(' ');
     const rows = [
       ['Motorrad', v?.name],
-      ['Lufttemperatur', s.temperatur?.luft ? s.temperatur.luft + ' °C' : null],
-      ['Asphalttemperatur', s.temperatur?.asphalt ? s.temperatur.asphalt + ' °C' : null],
-      ['Reifen', [s.reifen?.hersteller, s.reifen?.modell, s.reifen?.compound].filter(Boolean).join(' ')],
-      ['Druck vorne', s.reifen?.druck_vorne ? s.reifen.druck_vorne + ' bar' : null],
-      ['Druck hinten', s.reifen?.druck_hinten ? s.reifen.druck_hinten + ' bar' : null],
+      ['Lufttemperatur', s.temperatur?.luft !== '' ? s.temperatur?.luft + ' °C' : null],
+      ['Asphalttemperatur', s.temperatur?.asphalt !== '' ? s.temperatur?.asphalt + ' °C' : null],
+      ['Reifen Vorne', reifenVorne || null],
+      ['Druck Vorne', rv?.druck !== '' && rv?.druck !== undefined ? rv.druck + ' bar' : null],
+      ['Reifen Hinten', reifenHinten || null],
+      ['Druck Hinten', rh?.druck !== '' && rh?.druck !== undefined ? rh.druck + ' bar' : null],
+      ['Ritzel / Kettenrad', (s.sekundaer?.ritzel && s.sekundaer?.kettenrad) ? `${s.sekundaer.ritzel} / ${s.sekundaer.kettenrad} = ${(s.sekundaer.kettenrad / s.sekundaer.ritzel).toFixed(3)}` : null],
+      ['Kettenlänge', s.sekundaer?.kettenlaenge ? s.sekundaer.kettenlaenge + ' Glieder' : null],
+      ['Gabel Vorspannung', s.gabel?.federvorspannung !== '' && s.gabel?.federvorspannung !== undefined ? s.gabel.federvorspannung + ' Umdr.' : null],
       ['Gabel Druckstufe', s.gabel?.druckstufe_klicks !== '' ? s.gabel?.druckstufe_klicks + ' Klicks' : null],
       ['Gabel Zugstufe', s.gabel?.zugstufe_klicks !== '' ? s.gabel?.zugstufe_klicks + ' Klicks' : null],
+      ['Gabel Öltyp', s.gabel?.oeltyp !== '' && s.gabel?.oeltyp !== undefined ? String(s.gabel.oeltyp) : null],
+      ['Gabel Öllevel', s.gabel?.oelstand_mm !== '' && s.gabel?.oelstand_mm !== undefined ? s.gabel.oelstand_mm + ' mm' : null],
+      ['Federbein Vorspannung', s.federbein?.federvorspannung !== '' && s.federbein?.federvorspannung !== undefined ? s.federbein.federvorspannung + ' Umdr.' : null],
       ['Federbein Druckstufe', s.federbein?.druckstufe_klicks !== '' ? s.federbein?.druckstufe_klicks + ' Klicks' : null],
       ['Federbein Zugstufe', s.federbein?.zugstufe_klicks !== '' ? s.federbein?.zugstufe_klicks + ' Klicks' : null],
-      ['Federbein Höhe', s.federbein?.hoehe_mm ? s.federbein.hoehe_mm + ' mm (' + (s.federbein?.messpunkt || '') + ')' : null],
+      ['Federbein Höhe', s.federbein?.hoehe_mm ? s.federbein.hoehe_mm + ' mm' + (s.federbein?.messpunkt ? ' (' + s.federbein.messpunkt + ')' : '') : null],
+      ['TC Stufe', s.elektronik?.tc_stufe !== '' && s.elektronik?.tc_stufe !== undefined ? String(s.elektronik.tc_stufe) : null],
+      ['TC Modus', s.elektronik?.tc_modus || null],
     ].filter(([, v]) => v);
 
     return `
@@ -227,7 +400,7 @@ const ScreenZeiten = (() => {
     const rangeT = maxT - minT || 1;
 
     const toX = i => pad.left + (i / (data.length - 1)) * cW;
-    const toY = t => pad.top + (1 - (maxT - t) / rangeT) * cH;
+    const toY = t => pad.top + ((maxT - t) / rangeT) * cH;
 
     // Grid lines
     ctx.strokeStyle = '#2a2e3d';
