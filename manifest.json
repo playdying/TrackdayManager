@@ -1,0 +1,19 @@
+{
+  "name": "Trackday Manager",
+  "short_name": "Trackday",
+  "description": "Motorrad Trackday Daten verwalten",
+  "start_url": "/TrackdayManager/TrackdayManager.html",
+  "scope": "/TrackdayManager/",
+  "display": "standalone",
+  "background_color": "#0a0c10",
+  "theme_color": "#0a0c10",
+  "lang": "de",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
