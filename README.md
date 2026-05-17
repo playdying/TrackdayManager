@@ -10,7 +10,8 @@ Mobile-first Web-App zur Verwaltung von Motorrad-Trackday-Daten.
 
 - **Motorräder** verwalten mit allen technischen Details (Motor, Fahrwerk, Bremsen, Gewicht, Umbauten)
 - **Sessions erfassen** — Fahrwerk-Setup, Reifen, Elektronik, Bestzeit, Notizen
-- **Zeiten-Übersicht** mit Bestzeit-Banner, Delta-Anzeige und Zeitverlauf-Chart
+- **Sessions-Übersicht** mit Bestzeit-Banner, Delta-Anzeige und Zeitverlauf-Chart
+- **Setup-Vergleich** — alle Setup-Parameter als wischbare Graphen (Gabel, Federbein, Reifen, …)
 - **Filter** nach Motorrad, Strecke und Bedingung (Trocken / Nass)
 - **Export / Import** als JSON-Backup (funktioniert auf iOS & Desktop)
 - **Offline-fähig** — als PWA zum Homescreen hinzufügen
@@ -26,9 +27,27 @@ Assen IDM Kurs, Oschersleben, Mettet, Rijeka, Most, Brünn, Lausitzring, Spa, Zo
 ## Technik
 
 - Pure HTML / CSS / JavaScript — kein Framework, kein Server
-- Alles in einer einzigen `TrackdayManager.html` Datei
 - Datenspeicherung via `localStorage` — Daten bleiben lokal auf dem Gerät
 - PWA mit Service Worker für Offline-Nutzung
+
+### Projektstruktur
+
+```
+TrackdayManager.html    ← App-Shell (HTML-Gerüst)
+css/
+  app.css               ← Dark Theme Design-System
+js/
+  data.js               ← Datenschicht, CRUD, Export/Import
+  screen-fahrzeuge.js   ← Motorrad-Verwaltung
+  screen-wizard.js      ← Neue Session (3-Step Wizard)
+  screen-setup.js       ← Setup-Erfassung (Fahrwerk, Reifen, Elektronik)
+  screen-zeiten.js      ← Zeiten-Übersicht & Chart
+  export-import.js      ← Export/Import Logik
+  app.js                ← Router & App-Init
+manifest.json           ← PWA Manifest
+sw.js                   ← Service Worker (Offline-Cache)
+icon.svg                ← App-Icon
+```
 
 ---
 
@@ -50,3 +69,6 @@ Assen IDM Kurs, Oschersleben, Mettet, Rijeka, Most, Brünn, Lausitzring, Spa, Zo
 
 Unter **Einstellungen → Export** — speichert alle Motorräder und Sessions als `.json` Datei.  
 Mit **Import** auf einem anderen Gerät wiederherstellen.
+
+- **Desktop (Chrome/Edge):** Speichern-Dialog mit Ordnerauswahl
+- **iOS (Safari):** Share-Sheet → „In Dateien sichern"

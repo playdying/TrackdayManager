@@ -2,28 +2,43 @@
 
 ## Was ist das?
 Mobile-first Web-App zur Verwaltung von Motorrad-Trackday-Daten.
-Pure HTML/CSS/JS, kein Framework, kein Server — läuft direkt als `file://`.
+Pure HTML/CSS/JS, kein Framework, kein Server.
 Datenspeicherung via localStorage. Zielgeräte: iPhone, iPad, Desktop.
 Sprache: Deutsch. Design: Dark Theme.
 
-## Datei öffnen
-`TrackdayManager.html` direkt im Browser öffnen (Doppelklick oder `Start-Process`).
+## Hosting & Aufruf
+**Live:** https://playdying.github.io/TrackdayManager/TrackdayManager.html
+**Lokal:** `TrackdayManager.html` direkt im Browser öffnen (Doppelklick) — nur für Entwicklung/Testing.
+**PWA:** Als Homescreen-App installierbar (iOS Safari: Teilen → Zum Home-Bildschirm).
 
 ## Projektstruktur
 ```
-TrackdayManager.html      ← Einzige Datei — enthält HTML, CSS und alle Scripts inline
-CLAUDE.md                 ← Projektdoku für Claude
+TrackdayManager.html      ← App-Shell: nur HTML-Gerüst, lädt CSS + JS extern
+css/
+  app.css                 ← Komplettes Dark-Theme Design-System
+js/
+  data.js                 ← Datenschicht: localStorage, CRUD, Migration, Export/Import
+  screen-fahrzeuge.js     ← Motorrad-Verwaltung (CRUD mit Inline-Edit)
+  screen-wizard.js        ← 3-Step Wizard: Motorrad → Bedingungen → Strecke
+  screen-setup.js         ← Setup-Erfassung (Fahrwerk, Reifen, Elektronik) + Edit-Modus
+  screen-zeiten.js        ← Sessions-Übersicht, Charts, Filter, Session löschen/bearbeiten
+  export-import.js        ← JSON Export/Import mit Merge/Replace + Dateinamen-Modal
+  app.js                  ← Router (App.navigate), Bottom-Nav, DOMContentLoaded-Boot
+manifest.json             ← PWA Manifest
+sw.js                     ← Service Worker (Offline-Cache, Version: trackday-v2)
+icon.svg                  ← App-Icon (Motorrad, dark bg #0a0c10, accent #d4f53c)
+CLAUDE.md                 ← Diese Datei
+README.md                 ← GitHub Projektbeschreibung
 ```
 
-**Single-File Architektur:** Alles ist in `TrackdayManager.html` inline eingebettet.
-Keine externen CSS- oder JS-Dateien mehr. Reihenfolge der `<script>`-Blöcke im HTML:
-1. `data.js`             — Datenschicht: localStorage, CRUD, Migration, Export/Import
-2. `screen-fahrzeuge.js` — Motorrad-Verwaltung (CRUD mit Inline-Edit)
-3. `screen-wizard.js`    — 3-Step Wizard: Motorrad → Bedingungen → Strecke
-4. `screen-setup.js`     — Setup-Erfassung (Fahrwerk, Reifen, Elektronik) + Edit-Modus
-5. `screen-zeiten.js`    — Zeiten-Übersicht, Chart, Filter, Session löschen/bearbeiten
-6. `export-import.js`    — JSON Export/Import mit Merge/Replace + Dateinamen-Modal
-7. `app.js`              — Router (App.navigate), Bottom-Nav
+## Script-Ladereihenfolge in TrackdayManager.html
+1. `js/data.js`             — muss zuerst geladen sein (definiert DB, STRECKEN, CRUD-Funktionen)
+2. `js/screen-fahrzeuge.js`
+3. `js/screen-wizard.js`
+4. `js/screen-setup.js`
+5. `js/screen-zeiten.js`
+6. `js/export-import.js`
+7. `js/app.js`              — muss zuletzt geladen sein (referenziert alle anderen Screens)
 
 ## Datenmodell (DB_VERSION = 2)
 ```
@@ -39,6 +54,30 @@ sessions[]  → id, vehicleId, datum, uhrzeit, strecke, streckeKm, bedingung,
 events[]    → nicht mehr aktiv genutzt (Feature entfernt, Daten bleiben in localStorage)
 ```
 
+## Screen: Sessions (screen-zeiten.js)
+- Umbenennung: früher "Zeiten", jetzt "Sessions" (Nav-Label + Screen-Titel)
+- Rundenzeit-Chart: sichtbar wenn Motorrad UND Strecke gefiltert, mind. 2 Sessions mit Zeit
+- **Setup-Vergleich-Karussell**: direkt unter dem Rundenzeit-Chart, gleiche Größe
+  - Wischen (Touch) oder Pfeile zum Blättern zwischen Parametern
+  - Nur Parameter mit mind. 2 Datenpunkten werden angezeigt
+  - Nur sichtbar wenn Motorrad UND Strecke gefiltert
+  - SETUP_PARAMS-Typen:
+    - Standard (float): 4 gleichmäßige Gridlinien, 2 Nachkommastellen
+    - `integer: true`: Gridlinien nur auf ganzen Zahlen
+    - `categorical: true` + `categories: ['A','B','C']`: Buchstaben auf Y-Achse, feste Reihenfolge (A oben)
+
+## Eingabe-Validierung (screen-setup.js)
+| Feld | step | Typ |
+|------|------|-----|
+| Druckstufe, Zugstufe (Gabel + Federbein) | 1 | integer |
+| Ritzel, Kettenrad, Kettenlänge | 1 | integer |
+| TC Stufe | 1 | integer |
+| Federvorspannung (Gabel + Federbein) | 0.5 | halbe Umdrehungen |
+| Reifen Druck | 0.01 | float |
+| Negativfederweg, Durchstreckung, Höhe, Öllevel (mm) | 0.01 | float |
+| Temperaturen (Luft, Asphalt) | 0.01 | float |
+| Motor Modus (tc_modus) | — | Text (A, B, C, Sport…) |
+
 ## Export (plattformübergreifend)
 `getExportPayload()` liefert das JSON-Objekt. Die Speicherlogik in `ScreenEinstellungen._doExport()`:
 1. **`showSaveFilePicker`** — Desktop Chrome/Edge: echter Speichern-Dialog mit Ordnerauswahl
@@ -47,6 +86,11 @@ events[]    → nicht mehr aktiv genutzt (Feature entfernt, Daten bleiben in loc
 
 Vor dem Export erscheint ein Modal zur Eingabe des Dateinamens (Default: `TrackManager`).
 
+## Service Worker
+- Cache-Name: `trackday-v2` (bei Dateiänderungen erhöhen, damit alter Cache invalidiert wird)
+- Cacht: HTML, CSS, alle JS-Dateien, manifest.json, icon.svg
+- Strategie: Cache-first, Fallback auf HTML bei Netzwerkfehler
+
 ## Wichtige Designentscheidungen
 - Alle Felder optional (leerer String = nicht gesetzt)
 - Setup-Screen: Felder werden aus letzter Session pro Motorrad vorausgefüllt
@@ -54,8 +98,8 @@ Vor dem Export erscheint ein Modal zur Eingabe des Dateinamens (Default: `TrackM
 - Filter-Bar: eigener `<div>` außerhalb scroll-content (verhindert overflow-clipping)
 - Drag-to-scroll auf Filter-Bar für Desktop-Maus
 - Custom Bottom-Sheet Dropdowns statt native `<select>` für Filter
-- Chart: nur sichtbar wenn Motorrad UND Strecke gefiltert; älteste links, neueste rechts
 - `toY`: langsamere Zeiten oben, schnellere unten (Linie geht runter = Verbesserung)
+- Motor Modus heißt intern `elektronik.tc_modus` (Datenfeld unverändert, nur Label geändert)
 
 ## Bekannte Eigenheiten
 - `_attachCardEvents()` nur in `render()` aufrufen, NICHT in `_renderList()` (sonst doppelte Listener → Toggle funktioniert nicht)
@@ -63,10 +107,11 @@ Vor dem Export erscheint ein Modal zur Eingabe des Dateinamens (Default: `TrackM
 - `updateSession` macht shallow merge — verschachtelte Objekte (gabel, federbein etc.) werden komplett übergeben
 - Google Fonts wird extern geladen — App funktioniert offline, aber mit Fallback-Schrift
 
-## Strecken (STRECKEN in data.js Block)
+## Strecken (STRECKEN-Array in js/data.js)
 Assen IDM Kurs, Oschersleben, Mettet, Rijeka, Most, Brünn, Lausitzring, Spa, Zolder, Wuppertal, Hagen, RacelandKart, Vledderveen
 
 ## Label-Konventionen
 - Druckstufe → "Druckstufe (Klicks Offen)"
 - Zugstufe → "Zugstufe (Klicks Offen)"
 - Federvorspannung → "Federvorspannung (Umdr. Zu)"
+- TC Modus → "Motor Modus" (Label, Datenfeld bleibt `elektronik.tc_modus`)

@@ -1,8 +1,16 @@
-const CACHE = 'trackday-v1';
+const CACHE = 'trackday-v2';
 const ASSETS = [
   '/TrackdayManager/TrackdayManager.html',
   '/TrackdayManager/manifest.json',
-  '/TrackdayManager/icon.svg'
+  '/TrackdayManager/icon.svg',
+  '/TrackdayManager/css/app.css',
+  '/TrackdayManager/js/data.js',
+  '/TrackdayManager/js/screen-fahrzeuge.js',
+  '/TrackdayManager/js/screen-wizard.js',
+  '/TrackdayManager/js/screen-setup.js',
+  '/TrackdayManager/js/screen-zeiten.js',
+  '/TrackdayManager/js/export-import.js',
+  '/TrackdayManager/js/app.js'
 ];
 
 self.addEventListener('install', e => {
