@@ -9,9 +9,11 @@ Mobile-first Web-App zur Verwaltung von Motorrad-Trackday-Daten.
 ## Features
 
 - **Motorräder** verwalten mit allen technischen Details (Motor, Fahrwerk, Bremsen, Gewicht, Umbauten)
-- **Sessions erfassen** — Fahrwerk-Setup, Reifen, Elektronik, Bestzeit, Notizen
+- **Sessions erfassen** — Fahrwerk-Setup, Reifen, Elektronik, Gasgriff-Rolle, Bestzeit, Notizen
+- **Schnelle Bestzeit-Eingabe** — nur Ziffern tippen (z.B. `204381` → `2:04.381`), auch mobil
 - **Sessions-Übersicht** mit Bestzeit-Banner, Delta-Anzeige und Zeitverlauf-Chart
 - **Setup-Vergleich** — alle Setup-Parameter als wischbare Graphen (Gabel, Federbein, Reifen, …)
+- **Automatische Strecken-Gruppierung** — nur Motorrad filtern und die Graphen erscheinen pro Strecke
 - **Filter** nach Motorrad, Strecke und Bedingung (Trocken / Nass)
 - **Export / Import** als JSON-Backup (funktioniert auf iOS & Desktop)
 - **Offline-fähig** — als PWA zum Homescreen hinzufügen

@@ -57,15 +57,21 @@ events[]    → nicht mehr aktiv genutzt (Feature entfernt, Daten bleiben in loc
 
 ## Screen: Sessions (screen-zeiten.js)
 - Umbenennung: früher "Zeiten", jetzt "Sessions" (Nav-Label + Screen-Titel)
-- Rundenzeit-Chart: sichtbar wenn Motorrad UND Strecke gefiltert, mind. 2 Sessions mit Zeit
-- **Setup-Vergleich-Karussell**: direkt unter dem Rundenzeit-Chart, gleiche Größe
+- **Chart-Gruppen** (`chartGroups` in `_renderContent`):
+  - Motorrad + Strecke gefiltert → genau eine Gruppe (nur diese Strecke, ohne Überschrift)
+  - Nur Motorrad gefiltert → automatisch eine Gruppe pro Strecke mit ≥ 2 Sessions,
+    jeweils mit Streckenname als Überschrift (alphabetisch sortiert)
+  - Kein Motorrad gefiltert → keine Charts (Zeiten verschiedener Motorräder nicht vergleichbar)
+- Rundenzeit-Chart pro Gruppe: mind. 2 Sessions mit gültiger Bestzeit
+- **Setup-Vergleich-Karussell** pro Gruppe: direkt unter dem Rundenzeit-Chart, gleiche Größe
   - Wischen (Touch) oder Pfeile zum Blättern zwischen Parametern
   - Nur Parameter mit mind. 2 Datenpunkten werden angezeigt
-  - Nur sichtbar wenn Motorrad UND Strecke gefiltert
+  - Karussell-Position wird pro Strecke gemerkt (`_setupChartIdxByTrack`), Reset bei Filterwechsel
   - SETUP_PARAMS-Typen:
     - Standard (float): 4 gleichmäßige Gridlinien, 2 Nachkommastellen
     - `integer: true`: Gridlinien nur auf ganzen Zahlen
-    - `categorical: true` + `categories: ['A','B','C']`: Buchstaben auf Y-Achse, feste Reihenfolge (A oben)
+    - `categorical: true` + `categories: [...]`: Text auf Y-Achse, feste Reihenfolge
+      (erstes Element oben; Motor Modus: A/B/C, Gasgriff Rolle: 50/RR/45/40/35)
 
 ## Eingabe-Validierung (screen-setup.js)
 | Feld | step | Typ |
@@ -79,6 +85,7 @@ events[]    → nicht mehr aktiv genutzt (Feature entfernt, Daten bleiben in loc
 | Temperaturen (Luft, Asphalt) | 0.01 | float |
 | Motor Modus (tc_modus) | — | Text (A, B, C, Sport…) |
 | Gasgriff Rolle (gasgriff_rolle) | — | Dropdown: 35, 40, 45, RR, 50 (RR liegt zwischen 45 und 50) |
+| Bestzeit | — | `inputmode="numeric"` + Auto-Formatierung in `_formatBestzeit()`: nur Ziffern tippen, von rechts interpretiert (3 = ms, 2 = s, Rest = min), z.B. 204381 → 2:04.381; blur füllt auf volles M:SS.mmm auf |
 
 ## Export (plattformübergreifend)
 `getExportPayload()` liefert das JSON-Objekt. Die Speicherlogik in `ScreenEinstellungen._doExport()`:
