@@ -50,6 +50,7 @@ sessions[]  → id, vehicleId, datum, uhrzeit, strecke, streckeKm, bedingung,
                sekundaer{ritzel, kettenrad, kettenlaenge},
                reifen{vorne{hersteller, modell, compound, druck}, hinten{...}},
                elektronik{tc_stufe, tc_modus},
+               gasgriff_rolle,
                bestzeit, notiz
 events[]    → nicht mehr aktiv genutzt (Feature entfernt, Daten bleiben in localStorage)
 ```
@@ -77,6 +78,7 @@ events[]    → nicht mehr aktiv genutzt (Feature entfernt, Daten bleiben in loc
 | Negativfederweg, Durchstreckung, Höhe, Öllevel (mm) | 0.01 | float |
 | Temperaturen (Luft, Asphalt) | 0.01 | float |
 | Motor Modus (tc_modus) | — | Text (A, B, C, Sport…) |
+| Gasgriff Rolle (gasgriff_rolle) | — | Dropdown: 35, 40, 45, RR, 50 (RR liegt zwischen 45 und 50) |
 
 ## Export (plattformübergreifend)
 `getExportPayload()` liefert das JSON-Objekt. Die Speicherlogik in `ScreenEinstellungen._doExport()`:

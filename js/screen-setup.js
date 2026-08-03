@@ -309,6 +309,25 @@ const ScreenSetup = (() => {
           </div>
         </div>
 
+        <!-- Kurzhubgasgriff -->
+        <div class="setup-section">
+          <div class="setup-section-header">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="9"/><path d="M12 3v4M12 12l4-2"/>
+            </svg>
+            Kurzhubgasgriff
+          </div>
+          <div class="setup-section-body">
+            <div class="field-group">
+              <label class="field-label">Rollengröße</label>
+              <select class="field-input" id="gasgriff-rolle">
+                <option value="">—</option>
+                ${['35', '40', '45', 'RR', '50'].map(o => `<option value="${o}" ${String(pre.gasgriff_rolle ?? '') === o ? 'selected' : ''}>${o}</option>`).join('')}
+              </select>
+            </div>
+          </div>
+        </div>
+
         <!-- Bestzeit -->
         <div class="setup-section">
           <div class="setup-section-header">
@@ -320,8 +339,8 @@ const ScreenSetup = (() => {
           <div class="setup-section-body">
             <div class="field-group">
               <label class="field-label">Zeit (MM:SS.mmm)</label>
-              <input class="field-input bestzeit-input" id="setup-bestzeit" value="${_esc(pre.bestzeit || '')}" placeholder="2:04.381" inputmode="decimal">
-              <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Format: Minuten:Sekunden.Millisekunden</div>
+              <input class="field-input bestzeit-input" id="setup-bestzeit" value="${_esc(pre.bestzeit || '')}" placeholder="2:04.381" inputmode="numeric">
+              <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Nur Ziffern tippen — z.B. 204381 wird zu 2:04.381</div>
             </div>
           </div>
         </div>
@@ -364,6 +383,24 @@ const ScreenSetup = (() => {
       document.getElementById(id)?.addEventListener('input', _updateRatio);
     });
     _updateRatio();
+
+    const bzInput = document.getElementById('setup-bestzeit');
+    bzInput.addEventListener('input', () => { bzInput.value = _formatBestzeit(bzInput.value, false); });
+    bzInput.addEventListener('blur', () => { bzInput.value = _formatBestzeit(bzInput.value, true); });
+  }
+
+  // Formatiert eine reine Ziffernfolge zu M:SS.mmm (von rechts: 3 Ziffern ms, 2 Ziffern s, Rest min).
+  // final=true (blur): auf volles Format auffüllen, damit parseTime() die Zeit erkennt.
+  function _formatBestzeit(raw, final) {
+    let digits = raw.replace(/\D/g, '').replace(/^0+/, '').slice(0, 7);
+    if (!digits) return '';
+    if (final) digits = digits.padStart(6, '0');
+    if (digits.length <= 3) return digits;
+    const ms = digits.slice(-3);
+    const rest = digits.slice(0, -3);
+    const ss = rest.slice(-2);
+    const mm = rest.slice(0, -2);
+    return (mm ? mm + ':' : '') + ss + '.' + ms;
   }
 
   function _updateRatio() {
@@ -432,6 +469,7 @@ const ScreenSetup = (() => {
           druck: n('reifen-h-druck')
         }
       },
+      gasgriff_rolle: g('gasgriff-rolle'),
       bestzeit: g('setup-bestzeit'),
       notiz: g('setup-notiz')
     };

@@ -170,6 +170,7 @@ function addSession(data) {
       tc_stufe: data.elektronik?.tc_stufe ?? '',
       tc_modus: data.elektronik?.tc_modus ?? ''
     },
+    gasgriff_rolle: data.gasgriff_rolle || '',
     sekundaer: {
       ritzel: data.sekundaer?.ritzel ?? '',
       kettenrad: data.sekundaer?.kettenrad ?? '',

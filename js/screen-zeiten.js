@@ -7,7 +7,7 @@ const ScreenZeiten = (() => {
   let _filterBedingung = 'alle';
   const expandedSessions = new Set();
   let _deleteConfirmId = null;
-  let _setupChartIdx = 0;
+  let _setupChartIdxByTrack = {};
 
   const SETUP_PARAMS = [
     { key: 'reifen.vorne.druck',           label: 'Reifen Druck Vorne',        unit: 'bar' },
@@ -27,6 +27,7 @@ const ScreenZeiten = (() => {
     { key: 'sekundaer.kettenrad',          label: 'Kettenrad',                 unit: 'Z.', integer: true },
     { key: 'elektronik.tc_stufe',          label: 'TC Stufe',                  unit: '', integer: true },
     { key: 'elektronik.tc_modus',          label: 'Motor Modus',               unit: '', categorical: true, categories: ['A', 'B', 'C'] },
+    { key: 'gasgriff_rolle',               label: 'Gasgriff Rolle',            unit: '', categorical: true, categories: ['50', 'RR', '45', '40', '35'] },
     { key: 'temperatur.luft',              label: 'Lufttemperatur',            unit: '°C' },
     { key: 'temperatur.asphalt',           label: 'Asphalttemperatur',         unit: '°C' },
   ];
@@ -90,7 +91,7 @@ const ScreenZeiten = (() => {
       ];
       _openFilterSheet('Motorrad', options, _filterVehicle, val => {
         _filterVehicle = val;
-        _setupChartIdx = 0;
+        _setupChartIdxByTrack = {};
         _renderFilters();
         _renderContent();
       });
@@ -103,7 +104,7 @@ const ScreenZeiten = (() => {
       ];
       _openFilterSheet('Strecke', options, _filterTrack, val => {
         _filterTrack = val;
-        _setupChartIdx = 0;
+        _setupChartIdxByTrack = {};
         _renderFilters();
         _renderContent();
       });
@@ -173,22 +174,36 @@ const ScreenZeiten = (() => {
     const bestSeconds = withTime.length ? Math.min(...withTime.map(s => parseTime(s.bestzeit))) : null;
     const bestSession = withTime.find(s => parseTime(s.bestzeit) === bestSeconds);
 
-    const chartData = withTime
-      .slice()
-      .sort((a, b) => {
-        const ad = (a.datum || '') + 'T' + (a.uhrzeit || '');
-        const bd = (b.datum || '') + 'T' + (b.uhrzeit || '');
-        return ad < bd ? -1 : ad > bd ? 1 : 0;
-      })
-      .map(s => ({
-        datum: s.datum,
-        uhrzeit: s.uhrzeit,
-        timeSeconds: parseTime(s.bestzeit),
-        bestzeit: s.bestzeit,
-        bedingung: s.bedingung
-      }));
+    // Chart-Gruppen: bei Motorrad+Strecke genau eine Gruppe,
+    // bei nur Motorrad automatisch eine Gruppe pro Strecke mit >= 2 Sessions
+    let chartGroups = [];
+    if (_filterVehicle) {
+      if (_filterTrack) {
+        chartGroups = [{ track: _filterTrack, sessions: filtered }];
+      } else {
+        const byTrack = {};
+        filtered.forEach(s => {
+          if (!s.strecke) return;
+          (byTrack[s.strecke] = byTrack[s.strecke] || []).push(s);
+        });
+        chartGroups = Object.keys(byTrack).sort()
+          .filter(t => byTrack[t].length >= 2)
+          .map(t => ({ track: t, sessions: byTrack[t] }));
+      }
+    }
 
-    const showCharts = _filterVehicle && _filterTrack;
+    // filtered ist bereits nach Datum aufsteigend sortiert
+    chartGroups.forEach(g => {
+      g.chartData = g.sessions
+        .filter(s => parseTime(s.bestzeit) !== null)
+        .map(s => ({
+          datum: s.datum,
+          uhrzeit: s.uhrzeit,
+          timeSeconds: parseTime(s.bestzeit),
+          bestzeit: s.bestzeit,
+          bedingung: s.bedingung
+        }));
+    });
 
     const _dateOf = x => new Date((x.datum || '') + 'T' + (x.uhrzeit || ''));
     const timelineItems = filtered
@@ -209,15 +224,18 @@ const ScreenZeiten = (() => {
         <div><span class="badge badge-${bestSession.bedingung}">${bestSession.bedingung}</span></div>
       </div>` : ''}
 
-      ${chartData.length >= 2 && showCharts ? `
-      <div class="chart-container">
-        <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px">
-          Zeitverlauf — älteste links, neueste rechts
-        </div>
-        <canvas id="zeiten-chart" height="160"></canvas>
-      </div>` : ''}
-
-      ${showCharts ? `<div id="setup-chart-wrapper"></div>` : ''}
+      ${chartGroups.map((g, i) => `
+        ${!_filterTrack ? `
+        <div style="font-family:var(--font-display);font-size:16px;font-weight:700;letter-spacing:0.02em;margin:${i === 0 ? '0' : '18px'} 0 10px">${_esc(g.track)}</div>` : ''}
+        ${g.chartData.length >= 2 ? `
+        <div class="chart-container">
+          <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px">
+            Zeitverlauf — älteste links, neueste rechts
+          </div>
+          <canvas class="zeiten-chart" data-group="${i}" height="160"></canvas>
+        </div>` : ''}
+        <div class="setup-chart-wrapper" data-group="${i}"></div>
+      `).join('')}
 
       ${timelineItems.length === 0 ? `
       <div class="empty-state">
@@ -281,22 +299,20 @@ const ScreenZeiten = (() => {
       });
     });
 
-    // Draw lap time chart
-    const canvas = document.getElementById('zeiten-chart');
-    if (canvas && chartData.length >= 2) {
-      _drawChart(canvas, chartData);
-    }
+    // Draw lap time charts (one per group)
+    el.querySelectorAll('canvas.zeiten-chart').forEach(cv => {
+      const g = chartGroups[Number(cv.dataset.group)];
+      if (g && g.chartData.length >= 2) _drawChart(cv, g.chartData);
+    });
 
-    // Draw setup comparison carousel
-    if (showCharts) {
-      _renderSetupCarousel(filtered);
-    }
+    // Draw setup comparison carousels (one per group)
+    chartGroups.forEach((g, i) => _renderSetupCarousel(g.sessions, i, g.track));
   }
 
   // ── Setup Chart Carousel ──
 
-  function _renderSetupCarousel(sessions) {
-    const wrapper = document.getElementById('setup-chart-wrapper');
+  function _renderSetupCarousel(sessions, groupIdx, trackKey) {
+    const wrapper = document.querySelector(`.setup-chart-wrapper[data-group="${groupIdx}"]`);
     if (!wrapper) return;
 
     // Filter to params that have >= 2 data points
@@ -307,50 +323,56 @@ const ScreenZeiten = (() => {
 
     if (activeParams.length === 0) return;
 
-    // Clamp index
-    if (_setupChartIdx >= activeParams.length) _setupChartIdx = 0;
-    if (_setupChartIdx < 0) _setupChartIdx = 0;
+    // Clamp index (per track)
+    let idx = _setupChartIdxByTrack[trackKey] || 0;
+    if (idx >= activeParams.length || idx < 0) idx = 0;
+    _setupChartIdxByTrack[trackKey] = idx;
 
-    const current = activeParams[_setupChartIdx];
-    const hasPrev = _setupChartIdx > 0;
-    const hasNext = _setupChartIdx < activeParams.length - 1;
+    const current = activeParams[idx];
+    const hasPrev = idx > 0;
+    const hasNext = idx < activeParams.length - 1;
+
+    const goTo = newIdx => {
+      _setupChartIdxByTrack[trackKey] = newIdx;
+      _renderSetupCarousel(sessions, groupIdx, trackKey);
+    };
 
     wrapper.innerHTML = `
       <div class="chart-container">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-          <button class="btn-icon" id="setup-prev" style="opacity:${hasPrev ? 1 : 0.25};flex-shrink:0" ${hasPrev ? '' : 'disabled'}>
+          <button class="btn-icon setup-prev" style="opacity:${hasPrev ? 1 : 0.25};flex-shrink:0" ${hasPrev ? '' : 'disabled'}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polyline points="15 18 9 12 15 6"/>
             </svg>
           </button>
           <div style="text-align:center;flex:1;padding:0 8px">
             <div style="font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em">
-              Setup Vergleich · ${_setupChartIdx + 1} / ${activeParams.length}
+              Setup Vergleich · ${idx + 1} / ${activeParams.length}
             </div>
             <div style="font-size:13px;font-weight:600;color:var(--text);margin-top:2px">
               ${_esc(current.label)}${current.unit ? `<span style="color:var(--text-muted);font-weight:400"> (${current.unit})</span>` : ''}
             </div>
           </div>
-          <button class="btn-icon" id="setup-next" style="opacity:${hasNext ? 1 : 0.25};flex-shrink:0" ${hasNext ? '' : 'disabled'}>
+          <button class="btn-icon setup-next" style="opacity:${hasNext ? 1 : 0.25};flex-shrink:0" ${hasNext ? '' : 'disabled'}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polyline points="9 18 15 12 9 6"/>
             </svg>
           </button>
         </div>
-        <canvas id="setup-chart" height="160"></canvas>
+        <canvas class="setup-chart" height="160"></canvas>
         <div style="display:flex;justify-content:center;align-items:center;gap:5px;margin-top:10px;flex-wrap:wrap">
           ${activeParams.map((_, i) => `
-            <div style="height:5px;border-radius:3px;background:${i === _setupChartIdx ? 'var(--accent)' : 'var(--border)'};width:${i === _setupChartIdx ? '16px' : '5px'};transition:all 0.2s"></div>
+            <div style="height:5px;border-radius:3px;background:${i === idx ? 'var(--accent)' : 'var(--border)'};width:${i === idx ? '16px' : '5px'};transition:all 0.2s"></div>
           `).join('')}
         </div>
       </div>`;
 
     // Navigation buttons
-    wrapper.querySelector('#setup-prev')?.addEventListener('click', () => {
-      if (_setupChartIdx > 0) { _setupChartIdx--; _renderSetupCarousel(sessions); }
+    wrapper.querySelector('.setup-prev')?.addEventListener('click', () => {
+      if (idx > 0) goTo(idx - 1);
     });
-    wrapper.querySelector('#setup-next')?.addEventListener('click', () => {
-      if (_setupChartIdx < activeParams.length - 1) { _setupChartIdx++; _renderSetupCarousel(sessions); }
+    wrapper.querySelector('.setup-next')?.addEventListener('click', () => {
+      if (idx < activeParams.length - 1) goTo(idx + 1);
     });
 
     // Touch / swipe support
@@ -362,8 +384,8 @@ const ScreenZeiten = (() => {
     container.addEventListener('touchend', e => {
       const diff = touchStartX - e.changedTouches[0].clientX;
       if (Math.abs(diff) > 50) {
-        if (diff > 0 && _setupChartIdx < activeParams.length - 1) { _setupChartIdx++; _renderSetupCarousel(sessions); }
-        if (diff < 0 && _setupChartIdx > 0) { _setupChartIdx--; _renderSetupCarousel(sessions); }
+        if (diff > 0 && idx < activeParams.length - 1) goTo(idx + 1);
+        if (diff < 0 && idx > 0) goTo(idx - 1);
       }
     }, { passive: true });
 
@@ -402,7 +424,7 @@ const ScreenZeiten = (() => {
         .map(s => ({ datum: s.datum, value: _getVal(s, current.key) }));
     }
 
-    const canvas = document.getElementById('setup-chart');
+    const canvas = wrapper.querySelector('canvas.setup-chart');
     if (canvas) _drawSetupChart(canvas, chartSessions, current.unit, numToLabel, current.integer || false, yRange);
   }
 
@@ -646,6 +668,7 @@ const ScreenZeiten = (() => {
       ['Federbein Höhe', s.federbein?.hoehe_mm ? s.federbein.hoehe_mm + ' mm' + (s.federbein?.messpunkt ? ' (' + s.federbein.messpunkt + ')' : '') : null],
       ['TC Stufe', s.elektronik?.tc_stufe !== '' && s.elektronik?.tc_stufe !== undefined ? String(s.elektronik.tc_stufe) : null],
       ['Motor Modus', s.elektronik?.tc_modus || null],
+      ['Gasgriff Rolle', s.gasgriff_rolle || null],
     ].filter(([, v]) => v);
 
     return `
