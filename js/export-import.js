@@ -48,7 +48,7 @@ const ScreenEinstellungen = (() => {
         <div class="settings-item" style="cursor:default">
           <div class="settings-item-label">
             <span class="settings-item-title">Trackday Manager</span>
-            <span class="settings-item-desc">Version 1.0 · Daten lokal gespeichert</span>
+            <span class="settings-item-desc">Version 1.1 · Daten lokal gespeichert</span>
           </div>
         </div>
 
@@ -63,7 +63,7 @@ const ScreenEinstellungen = (() => {
         <div id="import-error" style="display:none;color:#ff4444;font-size:13px;padding:8px 0;line-height:1.5"></div>
         <div id="import-success" style="display:none;color:var(--accent);font-size:13px;padding:8px 0;line-height:1.5"></div>
 
-        <div class="app-version">© Trackday Manager V1</div>
+        <div class="app-version">© Trackday Manager V1.1</div>
       </div>`;
 
     document.getElementById('btn-export').addEventListener('click', _showExportModal);
