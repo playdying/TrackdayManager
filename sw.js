@@ -1,4 +1,4 @@
-const CACHE = 'trackday-v3';
+const CACHE = 'trackday-v4';
 const ASSETS = [
   '/TrackdayManager/TrackdayManager.html',
   '/TrackdayManager/manifest.json',

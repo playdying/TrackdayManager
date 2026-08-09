@@ -144,7 +144,8 @@ const ScreenEinstellungen = (() => {
       const file = new File([blob], fullName, { type: 'application/json' });
       if (navigator.canShare({ files: [file] })) {
         try {
-          await navigator.share({ files: [file], title: filename });
+          // Kein title/text mitgeben — iOS speichert diese sonst als zusätzliche Textdatei
+          await navigator.share({ files: [file] });
           return;
         } catch (e) {
           if (e.name === 'AbortError') return;
